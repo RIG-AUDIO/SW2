@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: 2026 MontroneDSP
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Manual Intel native diagnostics
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        type: choice
+        description: Run smoke-repro first; do not schedule profiles until its failure is resolved
+        default: smoke-repro
+        options: [smoke-repro, Release, Debug, asan-ubsan, tsan]
+  push:
+    branches: [ci/macos-130-qualification]
+    paths: [.github/workflows/macos-intel-native-diagnostics.yml]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: sw2-intel-diagnostics-${{ github.ref }}-${{ inputs.profile || 'smoke-repro' }}
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    if: github.repository == 'RIG-AUDIO/SW2'
+    runs-on: macos-15-intel
+    timeout-minutes: 350
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install cmake==3.31.6 ninja==1.11.1.4
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          github-token: ${{ github.token }}
+          run-id: 41924729723
+          name: UNQUALIFIED-universal-AU-VST3-3a287d0764cbbd57285582a25aa41b58ed6b03b1-1
+          path: ${{ runner.temp }}/approved-candidate
+      - name: Native diagnostics; technical result is not reference approval
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+          DIAGNOSTIC_PROFILE: ${{ inputs.profile || 'smoke-repro' }}
+        run: >-
+          python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE"
+          --root "$RUNNER_TEMP/intel-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
+      - name: Verify owned AU cleanup after failure
+        if: always()
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: >-
+          python3 scripts/macos/ci.py cleanup --source-sha "$GITHUB_SHA"
+          --base-source-sha 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7 --mode full
+          --root "$RUNNER_TEMP/intel-diagnostic"
+      - name: Preserve separate profile evidence including failures
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: intel-diagnostic-${{ inputs.profile || 'smoke-repro' }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/intel-diagnostic/*.json
+            ${{ runner.temp }}/intel-diagnostic/*.log
+            ${{ runner.temp }}/intel-diagnostic/*.xml
+            ${{ runner.temp }}/intel-diagnostic/*.png
+            ${{ runner.temp }}/intel-diagnostic/owned-login-*/*.log
+            ${{ runner.temp }}/intel-diagnostic/owned-login-*/cleanup.json
+          if-no-files-found: error
+          retention-days: 7

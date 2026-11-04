@@ -113,6 +113,8 @@ class PluginvalPolicyTests(unittest.TestCase):
 
 
 def load_tests(loader, tests, pattern):
+    import test_intel_diagnostics
+    tests.addTests(loader.loadTestsFromModule(test_intel_diagnostics))
     import test_scheduling
     tests.addTests(loader.loadTestsFromModule(test_scheduling))
     import test_policy

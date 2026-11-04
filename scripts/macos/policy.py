@@ -161,7 +161,7 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake'}
     for path in differences:
         require(path in parser_paths or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
-                or path in ('.github/workflows/macos-qualification.yml', '.github/workflows/macos-development-build.yml'), 'Product source changed: ' + path)
+                or path in ('.github/workflows/macos-qualification.yml', '.github/workflows/macos-development-build.yml', '.github/workflows/macos-intel-native-diagnostics.yml'), 'Product source changed: ' + path)
     # Exact, reviewed parser-only exception; arbitrary production changes still fail.
     original = subprocess.check_output(['git', 'show', BASE_SHA + ':Source/Tuning/TuningTable.cpp'], cwd=source).decode()
     expected = original.replace('#include "Tuning/TuningTable.h"', '#include "Tuning/TuningTable.h"\n#include "Tuning/RealFromChars.h"')
