@@ -1,0 +1,401 @@
+# SPDX-FileCopyrightText: 2026 MontroneDSP
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: macOS AU and VST3 qualification
+run-name: SWARA XT 1.3.0 macOS ${{ github.sha }}
+'on':
+  push:
+    branches:
+    - ci/macos-130-qualification
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Qualification scope
+        required: true
+        type: choice
+        default: preflight
+        options:
+        - preflight
+        - build
+        - smoke
+        - full
+permissions:
+  contents: read
+concurrency:
+  group: sw2-macos-qualification
+  cancel-in-progress: false
+jobs:
+  preflight:
+    if: github.repository == 'RIG-AUDIO/SW2'
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        platform: &id001
+        - runner: macos-15
+          arch: arm64
+        - runner: macos-15-intel
+          arch: x86_64
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      REVIEWED_SHA: ${{ github.sha }}
+      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      EXECUTION_MODE: ${{ inputs.mode || 'full' }}
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      TARGET_ARCH: ${{ matrix.platform.arch }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+    - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+        submodules: false
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.12'
+    - name: Verify immutable revision and pinned build frontend
+      shell: bash
+      run: 'set -euo pipefail
+
+        test "$GITHUB_REPOSITORY" = RIG-AUDIO/SW2
+
+        test "$SWARAXT_REPOSITORY_PRIVATE" = false
+
+        test "$REVIEWED_SHA" = "$GITHUB_SHA"
+
+        python3 -m pip install cmake==3.31.6 ninja==1.11.1.4'
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Public/public parity, toolchain and harness preflight
+      shell: bash
+      run: python3 scripts/macos/ci.py preflight --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --root "$RUNNER_TEMP/swara-preflight"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Public source-bound evidence, including failures
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: mac-preflight-${{ matrix.platform.arch }}-${{ github.sha }}-${{ github.run_attempt
+          }}
+        path: '${{ runner.temp }}/swara-preflight/*.log
+
+          ${{ runner.temp }}/swara-preflight/*.json
+
+          ${{ runner.temp }}/swara-preflight/*.xml
+
+          ${{ runner.temp }}/swara-preflight/*.png
+
+          ${{ runner.temp }}/swara-preflight/owned-login-*/*.log
+
+          ${{ runner.temp }}/swara-preflight/owned-login-*/cleanup.json
+
+          ${{ runner.temp }}/swara-preflight/native-reference/*.json
+
+          ${{ runner.temp }}/swara-preflight/build/Testing/Temporary/LastTest.log*'
+        if-no-files-found: error
+        retention-days: 7
+  universal:
+    if: (inputs.mode || 'full') != 'preflight'
+    needs: preflight
+    runs-on: macos-15
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      REVIEWED_SHA: ${{ github.sha }}
+      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      EXECUTION_MODE: ${{ inputs.mode || 'full' }}
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+    - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+        submodules: false
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.12'
+    - name: Verify immutable revision and pinned build frontend
+      shell: bash
+      run: 'set -euo pipefail
+
+        test "$GITHUB_REPOSITORY" = RIG-AUDIO/SW2
+
+        test "$SWARAXT_REPOSITORY_PRIVATE" = false
+
+        test "$REVIEWED_SHA" = "$GITHUB_SHA"
+
+        python3 -m pip install cmake==3.31.6 ninja==1.11.1.4'
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Build CI ad-hoc sealed universal AU/VST3 candidate
+      shell: bash
+      run: python3 scripts/macos/ci.py universal --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch arm64 --root "$RUNNER_TEMP/swara-universal"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Public unqualified universal candidate
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: candidate-universal-${{ github.sha }}-${{ github.run_attempt }}
+        path: '${{ runner.temp }}/swara-universal/swaraxt-unsigned-universal.tar.gz
+
+          ${{ runner.temp }}/swara-universal/archive-sha256.txt'
+        if-no-files-found: error
+        retention-days: 7
+      if: always()
+    - name: Public source-bound evidence, including failures
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: mac-universal-${{ github.sha }}-${{ github.run_attempt }}
+        path: '${{ runner.temp }}/swara-universal/*.log
+
+          ${{ runner.temp }}/swara-universal/*.json
+
+          ${{ runner.temp }}/swara-universal/*.xml
+
+          ${{ runner.temp }}/swara-universal/*.png
+
+          ${{ runner.temp }}/swara-universal/owned-login-*/*.log
+
+          ${{ runner.temp }}/swara-universal/owned-login-*/cleanup.json
+
+          ${{ runner.temp }}/swara-universal/native-reference/*.json
+
+          ${{ runner.temp }}/swara-universal/build/Testing/Temporary/LastTest.log*'
+        if-no-files-found: error
+        retention-days: 7
+  smoke:
+    if: (inputs.mode || 'full') == 'smoke' || (inputs.mode || 'full') == 'full'
+    needs:
+    - preflight
+    - universal
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        platform: *id001
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      REVIEWED_SHA: ${{ github.sha }}
+      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      EXECUTION_MODE: ${{ inputs.mode || 'full' }}
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      TARGET_ARCH: ${{ matrix.platform.arch }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+    - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+        submodules: false
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.12'
+    - name: Verify immutable revision and pinned build frontend
+      shell: bash
+      run: 'set -euo pipefail
+
+        test "$GITHUB_REPOSITORY" = RIG-AUDIO/SW2
+
+        test "$SWARAXT_REPOSITORY_PRIVATE" = false
+
+        test "$REVIEWED_SHA" = "$GITHUB_SHA"
+
+        python3 -m pip install cmake==3.31.6 ninja==1.11.1.4'
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        name: candidate-universal-${{ github.sha }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/candidate-download
+    - name: Verify and smoke-test immutable universal candidate natively
+      shell: bash
+      run: python3 scripts/macos/ci.py smoke --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --root "$RUNNER_TEMP/swara-smoke"
+        --candidate-download "$RUNNER_TEMP/candidate-download"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Verify owned AU cleanup even after failure
+      if: always()
+      shell: bash
+      run: python3 scripts/macos/ci.py cleanup --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/swara-smoke"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Public source-bound evidence, including failures
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: mac-smoke-${{ matrix.platform.arch }}-${{ github.sha }}-${{ github.run_attempt
+          }}
+        path: '${{ runner.temp }}/swara-smoke/*.log
+
+          ${{ runner.temp }}/swara-smoke/*.json
+
+          ${{ runner.temp }}/swara-smoke/*.xml
+
+          ${{ runner.temp }}/swara-smoke/*.png
+
+          ${{ runner.temp }}/swara-smoke/owned-login-*/*.log
+
+          ${{ runner.temp }}/swara-smoke/owned-login-*/cleanup.json
+
+          ${{ runner.temp }}/swara-smoke/native-reference/*.json
+
+          ${{ runner.temp }}/swara-smoke/build/Testing/Temporary/LastTest.log*'
+        if-no-files-found: error
+        retention-days: 7
+  native:
+    if: (inputs.mode || 'full') == 'full'
+    needs:
+    - preflight
+    - universal
+    - smoke
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        platform: *id001
+        profile:
+        - Release
+        - Debug
+        - asan-ubsan
+        - tsan
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 350
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      REVIEWED_SHA: ${{ github.sha }}
+      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      EXECUTION_MODE: ${{ inputs.mode || 'full' }}
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      TARGET_ARCH: ${{ matrix.platform.arch }}
+      TARGET_PROFILE: ${{ matrix.profile }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+    - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+        submodules: false
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.12'
+    - name: Verify immutable revision and pinned build frontend
+      shell: bash
+      run: 'set -euo pipefail
+
+        test "$GITHUB_REPOSITORY" = RIG-AUDIO/SW2
+
+        test "$SWARAXT_REPOSITORY_PRIVATE" = false
+
+        test "$REVIEWED_SHA" = "$GITHUB_SHA"
+
+        python3 -m pip install cmake==3.31.6 ninja==1.11.1.4'
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        name: candidate-universal-${{ github.sha }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/candidate-download
+    - name: Complete native profile and exact-audio reference campaign
+      shell: bash
+      run: python3 scripts/macos/ci.py tests --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --profile "$TARGET_PROFILE"
+        --root "$RUNNER_TEMP/swara-native" --candidate-download "$RUNNER_TEMP/candidate-download"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Verify owned AU cleanup even after failure
+      if: always()
+      shell: bash
+      run: python3 scripts/macos/ci.py cleanup --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/swara-native"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - name: Public source-bound evidence, including failures
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: mac-native-${{ matrix.platform.arch }}-${{ matrix.profile }}-${{ github.sha
+          }}-${{ github.run_attempt }}
+        path: '${{ runner.temp }}/swara-native/*.log
+
+          ${{ runner.temp }}/swara-native/*.json
+
+          ${{ runner.temp }}/swara-native/*.xml
+
+          ${{ runner.temp }}/swara-native/*.png
+
+          ${{ runner.temp }}/swara-native/owned-login-*/*.log
+
+          ${{ runner.temp }}/swara-native/owned-login-*/cleanup.json
+
+          ${{ runner.temp }}/swara-native/native-reference/*.json
+
+          ${{ runner.temp }}/swara-native/build/Testing/Temporary/LastTest.log*'
+        if-no-files-found: error
+        retention-days: 7
+  qualification-gate:
+    if: always()
+    needs:
+    - preflight
+    - universal
+    - smoke
+    - native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      REVIEWED_SHA: ${{ github.sha }}
+      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      EXECUTION_MODE: ${{ inputs.mode || 'full' }}
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      PREFLIGHT_RESULT: ${{ needs.preflight.result }}
+      UNIVERSAL_RESULT: ${{ needs.universal.result }}
+      SMOKE_RESULT: ${{ needs.smoke.result }}
+      NATIVE_RESULT: ${{ needs.native.result }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+    - name: Verify public revision before evidence inspection
+      shell: bash
+      run: 'set -euo pipefail
+
+        test "$GITHUB_REPOSITORY" = RIG-AUDIO/SW2
+
+        test "$SWARAXT_REPOSITORY_PRIVATE" = false
+
+        test "$REVIEWED_SHA" = "$GITHUB_SHA"'
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+    - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      with:
+        persist-credentials: false
+        submodules: false
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.12'
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        pattern: mac-*-${{ github.sha }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/qualification-evidence
+    - name: Independently validate current-run evidence and qualification scope
+      shell: bash
+      run: python3 scripts/macos/ci.py gate --source-sha "$REVIEWED_SHA" --base-source-sha
+        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/qualification-evidence"
+      env:
+        RUNNER_ENVIRONMENT: ${{ runner.environment }}
+      if: always()
+    - name: Public final qualification decision
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: qualification-gate-${{ github.sha }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/qualification-evidence/qualification-gate.json
+        if-no-files-found: error
+        retention-days: 7
