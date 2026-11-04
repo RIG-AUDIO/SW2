@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 import zipfile
 
-from policy import require, revision, owned_path, hosted_root, safe_extract_tar, safe_extract_zip
+from policy import require, revision, owned_path, hosted_root, safe_extract_tar, safe_extract_zip, compare_public, BASE_SHA
 from gate import evaluate, inspect_ctest
 
 
@@ -23,7 +23,7 @@ class PublicPolicyTests(unittest.TestCase):
             with self.assertRaises(RuntimeError): revision(value)
         self.assertEqual(revision('a' * 40), 'a' * 40)
 
-    def test_hosted_private_runner_boundary(self):
+    def test_hosted_public_runner_boundary(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': 'RIG-AUDIO/SW2',
@@ -37,6 +37,16 @@ class PublicPolicyTests(unittest.TestCase):
                                  ('RUNNER_ENVIRONMENT', 'self-hosted'), ('GITHUB_ACTIONS', 'false')]:
                     with patch.dict(os.environ, {key: bad}):
                         with self.assertRaises(RuntimeError): hosted_root(root / 'owned')
+
+    def test_product_changes_cannot_be_admitted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            (source / 'CMakeLists.txt').write_text('project(SwaraXT VERSION 1.3.0 LANGUAGES C CXX)')
+            for protected in ('Source/Dsp.cpp', 'Tests/Filter/Golden.h', 'resources/art.png',
+                              '.github/workflows/linux-qualification.yml'):
+                with patch('policy.git_tree', side_effect=[{protected: 'base'}, {protected: 'changed'}]):
+                    with self.assertRaisesRegex(RuntimeError, 'Product source changed'):
+                        compare_public(source, source, 'a' * 40, BASE_SHA)
 
     def test_symlink_or_traversal_not_owned(self):
         with tempfile.TemporaryDirectory() as directory:

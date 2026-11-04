@@ -159,13 +159,20 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     for path in differences:
         require(path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
                 or path == '.github/workflows/macos-qualification.yml', 'Product source changed: ' + path)
-    for path in ('Source', 'resources', 'third_party'):
-        require(before.get(path) == after.get(path), 'Protected product tree changed: ' + path)
+    trees = {}
+    for path in ('Source', 'resources', 'third_party', 'Tests'):
+        old = subprocess.run(['git', 'rev-parse', BASE_SHA + ':' + path], cwd=source,
+                             text=True, capture_output=True, check=True).stdout.strip()
+        new = subprocess.run(['git', 'rev-parse', checkout_sha + ':' + path], cwd=source,
+                             text=True, capture_output=True, check=True).stdout.strip()
+        if path != 'Tests':
+            require(old == new, 'Protected product tree changed: ' + path)
+        trees[path] = {'base': old, 'checkout': new}
     version = re.search(r'project\(SwaraXT VERSION ([0-9.]+)', (Path(source) / 'CMakeLists.txt').read_text())
     require(version and version[1] == '1.3.0', 'Product version changed')
     return {'base_source_sha': BASE_SHA, 'checkout_sha': checkout_sha,
             'production_parity': 'BYTE_IDENTICAL', 'version': '1.3.0',
-            'product_trees': {p: before.get(p) for p in ('Source', 'resources', 'Tests')},
+            'product_trees': trees,
             'integration_paths': differences}
 
 

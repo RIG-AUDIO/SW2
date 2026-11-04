@@ -27,6 +27,8 @@ def apply(juce, owned_root):
     # all documented discrete-channel IDs (128..1023), including the AU probe's
     # 256+i values, without changing any channel number or audio computation.
     after = before.replace(anchor, anchor.replace(b'ChannelType', b'ChannelType : unsigned int'))
+    if hashlib.sha256(after).hexdigest() != '5f1308b04dbaf4646ac420001068b2b90f41c0977a61fce5931ac6988ffa7675':
+        raise RuntimeError('Unexpected resulting JUCE channel header hash')
     path.write_bytes(after)
     return {'file': path.relative_to(juce).as_posix(),
             'before_sha256': hashlib.sha256(before).hexdigest(),

@@ -40,7 +40,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       REVIEWED_SHA: ${{ github.sha }}
-      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      BASE_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
       EXECUTION_MODE: ${{ inputs.mode || 'full' }}
       SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
       TARGET_ARCH: ${{ matrix.platform.arch }}
@@ -67,10 +67,10 @@ jobs:
         python3 -m pip install cmake==3.31.6 ninja==1.11.1.4'
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
-    - name: Public/public parity, toolchain and harness preflight
+    - name: Source identity, toolchain and harness preflight
       shell: bash
       run: python3 scripts/macos/ci.py preflight --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --root "$RUNNER_TEMP/swara-preflight"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --root "$RUNNER_TEMP/swara-preflight"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
     - name: Public source-bound evidence, including failures
@@ -104,7 +104,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       REVIEWED_SHA: ${{ github.sha }}
-      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      BASE_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
       EXECUTION_MODE: ${{ inputs.mode || 'full' }}
       SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
       PYTHONDONTWRITEBYTECODE: '1'
@@ -133,7 +133,7 @@ jobs:
     - name: Build CI ad-hoc sealed universal AU/VST3 candidate
       shell: bash
       run: python3 scripts/macos/ci.py universal --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch arm64 --root "$RUNNER_TEMP/swara-universal"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --arch arm64 --root "$RUNNER_TEMP/swara-universal"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
     - name: Public unqualified universal candidate
@@ -183,7 +183,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       REVIEWED_SHA: ${{ github.sha }}
-      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      BASE_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
       EXECUTION_MODE: ${{ inputs.mode || 'full' }}
       SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
       TARGET_ARCH: ${{ matrix.platform.arch }}
@@ -217,7 +217,7 @@ jobs:
     - name: Verify and smoke-test immutable universal candidate natively
       shell: bash
       run: python3 scripts/macos/ci.py smoke --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --root "$RUNNER_TEMP/swara-smoke"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --root "$RUNNER_TEMP/swara-smoke"
         --candidate-download "$RUNNER_TEMP/candidate-download"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
@@ -225,7 +225,7 @@ jobs:
       if: always()
       shell: bash
       run: python3 scripts/macos/ci.py cleanup --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/swara-smoke"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/swara-smoke"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
     - name: Public source-bound evidence, including failures
@@ -272,7 +272,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       REVIEWED_SHA: ${{ github.sha }}
-      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      BASE_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
       EXECUTION_MODE: ${{ inputs.mode || 'full' }}
       SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
       TARGET_ARCH: ${{ matrix.platform.arch }}
@@ -307,7 +307,7 @@ jobs:
     - name: Complete native profile and exact-audio reference campaign
       shell: bash
       run: python3 scripts/macos/ci.py tests --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --profile "$TARGET_PROFILE"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --arch "$TARGET_ARCH" --profile "$TARGET_PROFILE"
         --root "$RUNNER_TEMP/swara-native" --candidate-download "$RUNNER_TEMP/candidate-download"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
@@ -315,7 +315,7 @@ jobs:
       if: always()
       shell: bash
       run: python3 scripts/macos/ci.py cleanup --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/swara-native"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/swara-native"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
     - name: Public source-bound evidence, including failures
@@ -353,7 +353,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       REVIEWED_SHA: ${{ github.sha }}
-      PUBLIC_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      BASE_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
       EXECUTION_MODE: ${{ inputs.mode || 'full' }}
       SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
       PREFLIGHT_RESULT: ${{ needs.preflight.result }}
@@ -387,7 +387,7 @@ jobs:
     - name: Independently validate current-run evidence and qualification scope
       shell: bash
       run: python3 scripts/macos/ci.py gate --source-sha "$REVIEWED_SHA" --base-source-sha
-        "$PUBLIC_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/qualification-evidence"
+        "$BASE_SHA" --mode "$EXECUTION_MODE" --root "$RUNNER_TEMP/qualification-evidence"
       env:
         RUNNER_ENVIRONMENT: ${{ runner.environment }}
       if: always()
