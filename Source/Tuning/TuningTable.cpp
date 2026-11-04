@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Tuning/TuningTable.h"
+#include "Tuning/RealFromChars.h"
 
 #include <charconv>
 #include <cmath>
@@ -144,7 +145,7 @@ bool parseFullReal(std::string_view text, double& value, bool legacyComma = true
     }
     const char* const first = text.data();
     const char* const last = first + text.size();
-    const auto parsed = std::from_chars(first, last, value, std::chars_format::general);
+    const auto parsed = detail::realFromChars(first, last, value);
     return parsed.ec == std::errc() && parsed.ptr == last && std::isfinite(value);
 }
 
@@ -329,7 +330,7 @@ bool standardPitch(std::string_view line, double& cents)
     if (line.empty() || (line.front() != '-' && (line.front() < '0' || line.front() > '9')))
         return false;
     double value = 0.0;
-    const auto parsed = std::from_chars(line.data(), line.data() + line.size(), value);
+    const auto parsed = detail::realFromChars(line.data(), line.data() + line.size(), value);
     if (parsed.ec != std::errc() || ! std::isfinite(value))
         return false;
     const auto numeric = line.substr(0, static_cast<size_t>(parsed.ptr - line.data()));

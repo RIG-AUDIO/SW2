@@ -1,0 +1,91 @@
+{
+  "status": "PASS",
+  "standard_library": "GCC 15.1.1 libstdc++ on Linux",
+  "language": "C++17",
+  "warnings": "-Wall -Wextra -Wpedantic -Werror",
+  "original_source_commit": "da3d8e1849cdb73bd0e9ec70cbfb97c6e16c7e8a",
+  "fast_float": {
+    "tag": "v8.2.5",
+    "sha": "05087a303dad9c98768b33c829d398223a649bc6",
+    "license": "MIT"
+  },
+  "numeric_comparison": {
+    "cases": 71602,
+    "differences": 0,
+    "allocations": 0,
+    "allocation_hook_positive_control": "PASS",
+    "compared": [
+      "error code",
+      "consumed characters",
+      "exact binary64 result including signed zero and nonfinite inputs",
+      "unchanged destination on errors"
+    ]
+  },
+  "scala_corpus": {
+    "cases": 256,
+    "dialects": [
+      "legacy",
+      "standard"
+    ],
+    "compared": [
+      "acceptance",
+      "error message",
+      "exact serialized tuning snapshot"
+    ]
+  },
+  "regressions": [
+    {
+      "test": "tuning",
+      "mode": "original",
+      "exit_code": 0
+    },
+    {
+      "test": "tuning",
+      "mode": "portable",
+      "exit_code": 0
+    },
+    {
+      "test": "fuzz",
+      "mode": "original",
+      "exit_code": 0
+    },
+    {
+      "test": "fuzz",
+      "mode": "portable",
+      "exit_code": 0
+    },
+    {
+      "test": "quantizer",
+      "mode": "original",
+      "exit_code": 0
+    },
+    {
+      "test": "quantizer",
+      "mode": "portable",
+      "exit_code": 0
+    },
+    {
+      "test": "scala-corpus",
+      "mode": "original",
+      "exit_code": 0
+    },
+    {
+      "test": "scala-corpus",
+      "mode": "portable",
+      "exit_code": 0
+    }
+  ],
+  "log_hashes": {
+    "scala-corpus-portable.log": "211811f30af646b5093a531938698939b6778733c5fcde32cc654f33a4a6f656",
+    "scala-corpus-original.log": "211811f30af646b5093a531938698939b6778733c5fcde32cc654f33a4a6f656",
+    "quantizer-portable.log": "6eea4b6c008a2baccce41510f193c693b469ba75eceb74849adab556e8fb47de",
+    "quantizer-original.log": "6eea4b6c008a2baccce41510f193c693b469ba75eceb74849adab556e8fb47de",
+    "fuzz-portable.log": "5a65f8be2b7cee7622606b139001d3e49e828035948b323bd6d1b03b1b22e898",
+    "fuzz-original.log": "5a65f8be2b7cee7622606b139001d3e49e828035948b323bd6d1b03b1b22e898",
+    "tuning-portable.log": "f14a5fa5c28be13ef99312a615f2eb2942bbeb1ec8d8c1eacfe936e4b78dc616",
+    "tuning-original.log": "f14a5fa5c28be13ef99312a615f2eb2942bbeb1ec8d8c1eacfe936e4b78dc616"
+  },
+  "parser_source_sha256": "3de88d494b844a865ca6546afc34f9c3482f42ec6ae827a36cef8fbd0141c3a0",
+  "numerical_test_sha256": "460d7e029a6fd24a1ad35d65d2a47d0b8a42b8fa626e940217c099751939803a",
+  "not_an_audio_reference_approval": true
+}

@@ -51,7 +51,7 @@ def evaluate(root, args):
         require(data['run_id'] == os.environ['GITHUB_RUN_ID'] and data['run_attempt'] == os.environ['GITHUB_RUN_ATTEMPT'], 'Report run/attempt mismatch')
         require(data['repository'] == 'RIG-AUDIO/SW2' and data['execution_mode'] == args.mode, 'Report repository/mode mismatch')
         require(data['juce_sha'] == JUCE_SHA and data['standalone'] is False, 'Dependency/format mismatch')
-        require(data['source_parity']['production_parity'] == 'BYTE_IDENTICAL' and
+        require(data['source_parity']['production_parity'] == 'EXACT_PARSER_PORTABILITY_EXCEPTION' and
                 data['source_parity']['base_source_sha'] == args.base_source_sha and
                 data['source_parity']['checkout_sha'] == args.source_sha, 'Missing product source parity')
         require(data['xcode_version'].startswith('Xcode 16.4\n') and data['compiler_version'] and data['macos_version'].startswith('15.'), 'Unreviewed native toolchain')

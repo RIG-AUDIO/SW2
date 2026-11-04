@@ -1,0 +1,22 @@
+{
+  "repository": "https://github.com/fastfloat/fast_float",
+  "tag": "v8.2.5",
+  "commit": "05087a303dad9c98768b33c829d398223a649bc6",
+  "selected_license": "MIT",
+  "files": {
+    "AUTHORS": "ed249424bce4e318fa190dd6d8becf60cfc37287132ad3f89e16e0f28d878dcf",
+    "CONTRIBUTORS": "32fadf79865946e5decc1ed89dd6aa509bd922ff54f85a47a0c94667dc282d17",
+    "LICENSE-APACHE": "097a889aa954d04e088b790b10a4014d6189561d0a6013935a73ce3d4ddaaf06",
+    "LICENSE-BOOST": "8d8291caf1cee26d23acf3eb67c9f9a2d58f1c681b16a4fbe8cbfb9e3c0b5a9b",
+    "LICENSE-MIT": "e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6",
+    "include/fast_float/ascii_number.h": "1b3e0b915a91e94999a8f735131895db6114b540834786636943210e21cef77a",
+    "include/fast_float/bigint.h": "1ed0b598da0b522613399897ddc748792dee6f804debf9fee131359252f80763",
+    "include/fast_float/constexpr_feature_detect.h": "2dd2dc5f98a8f1a78813e62d47e82a19ebe42af726356723d60f6eb387c6dd38",
+    "include/fast_float/decimal_to_binary.h": "82fad8134c272a3f1bc545b3ef367a2e9e3c7464b9dcef75640c37e325dfb973",
+    "include/fast_float/digit_comparison.h": "0e2e0a4aad20c0a3a647d3d5adea57ee7a843750ea989594b3ca801bd66f8264",
+    "include/fast_float/fast_float.h": "d2e07ef3ef8c2ccbd23c407d06dbce70883d32d17efd05ea9e1aca30417bde67",
+    "include/fast_float/fast_table.h": "c18e0a0a2513215730557cc1dd53541cacd72855ddc0287934e78b364f989edb",
+    "include/fast_float/float_common.h": "76ef9197271076b25c2b1272dcd5ab4ca211dfff12fbd281c51d59f9e256afe4",
+    "include/fast_float/parse_number.h": "b6250b11d136e42f699755e756db94b643bae894c5157b78d341d5f81f221bdd"
+  }
+}

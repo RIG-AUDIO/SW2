@@ -133,7 +133,7 @@ class Campaign(PublicInfrastructure):
         self.sanitizer_flags = flags
         config = 'Debug' if self.args.profile == 'Debug' else 'Release'
         self.run('configure', ['cmake', '-S', SOURCE, '-B', build, '-G', 'Ninja',
-                 '-DCMAKE_BUILD_TYPE=' + config,
+                 '-DCMAKE_BUILD_TYPE=' + config, '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
                  '-DCMAKE_OSX_ARCHITECTURES=' + ('x86_64;arm64' if universal else self.args.arch),
                  '-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0', '-DSWARAXT_JUCE_DIR=' + str(juce),
                  '-DSWARA_BUILD_STANDALONE=OFF', '-DSWARA_BUILD_SKIN_EDITOR=OFF',
@@ -225,6 +225,22 @@ class Campaign(PublicInfrastructure):
             require(info['CFBundleShortVersionString'] == self.version, 'Product version mismatch')
             binaries[bundle.name] = check_bundle(bundle, self.version, ['arm64', 'x86_64'])
             shutil.copytree(bundle, stage / bundle.name, symlinks=True)
+        commands = json.loads((build / 'compile_commands.json').read_text())
+        compiled = {}
+        for entry in commands:
+            path = Path(entry['file'])
+            if path.is_file():
+                compiled[str(path)] = digest(path)
+        for path in [SOURCE / 'Source/Tuning/RealFromChars.h', *(SOURCE / 'third_party/fast_float').rglob('*.h')]:
+            compiled[str(path)] = digest(path)
+        compiled_manifest = {'checkout_sha': self.report['source_sha'], 'files': compiled,
+                             'actual_parser_source_sha256': digest(SOURCE / 'Source/Tuning/TuningTable.cpp'),
+                             'parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION'}
+        compiled_file = self.root / 'compiled-source-manifest.json'
+        compiled_file.write_text(json.dumps(compiled_manifest, indent=2) + '\n')
+        shutil.copy2(compiled_file, stage / compiled_file.name)
+        self.report['compiled_source_manifest_sha256'] = digest(compiled_file)
+        self.report['actual_parser_source_sha256'] = compiled_manifest['actual_parser_source_sha256']
         files = files_manifest(stage)
         manifest = {'source_sha': self.report['source_sha'], 'juce_sha': JUCE_SHA,
                     'dependency_overlay': self.report['dependency_overlay'],
@@ -232,6 +248,8 @@ class Campaign(PublicInfrastructure):
                     'xcode_version': self.report['xcode_version'], 'compiler_version': self.report['compiler_version'],
                     'run_id': self.report['run_id'], 'run_attempt': self.report['run_attempt'],
                     'base_source_sha': self.args.base_source_sha, 'version': self.version,
+                    'compiled_source_manifest_sha256': self.report['compiled_source_manifest_sha256'],
+                    'actual_parser_source_sha256': self.report['actual_parser_source_sha256'],
                     'qualification_status': 'BUILD_PASS_UNQUALIFIED', 'formats': ['AU', 'VST3'],
                     'standalone': False, 'ci_bundle_signature': self.report['ci_bundle_signature'],
                     'binaries': binaries, 'files': files,
@@ -349,9 +367,9 @@ class Campaign(PublicInfrastructure):
     def smoke(self, juce):
         build, config = self.configure(juce)
         self.run('build-smoke-tools', ['cmake', '--build', build, '--target',
-                 'SwaraXTApplePluginHost', 'SwaraXTChannelTypeContractTests', '--parallel', '2'])
+                 'SwaraXTApplePluginHost', 'SwaraXTChannelTypeContractTests', 'SwaraXTTuningTableTests', 'SwaraXTTuningFuzzRegressionTests', 'SwaraXTQuantizerTests', '--parallel', '2'])
         self.run('channel-domain-smoke', ['ctest', '--test-dir', build, '--output-on-failure',
-                 '--no-tests=error', '-R', '^SwaraXTChannelTypeContractTests$'])
+                 '--no-tests=error', '-R', '^(SwaraXTChannelTypeContractTests|SwaraXTTuningTableTests|SwaraXTTuningFuzzRegressionTests|SwaraXTQuantizerTests)$'])
         host = build / 'Tests/Apple/SwaraXTApplePluginHost_artefacts' / config / 'SwaraXTApplePluginHost'
         require(self.actual_hosts(host, self.verified_candidate()), 'Actual native product smoke failed')
         self.report['qualification_scope'] = 'EARLY_NATIVE_HOST_SMOKE_ONLY'

@@ -72,3 +72,10 @@ path = [
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Andrea Montrone"
 SPDX-License-Identifier = "CC-BY-SA-3.0"
+
+# Vendored fast_float v8.2.5, MIT option selected; upstream files unmodified.
+[[annotations]]
+path = ["third_party/fast_float/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "2021 The fast_float authors"
+SPDX-License-Identifier = "MIT"

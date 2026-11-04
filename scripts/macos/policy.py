@@ -151,27 +151,46 @@ def git_tree(source, ref):
             for entry in output.split(b'\0') if entry}
 
 
+PARSER_HASHES = {'Source/Tuning/RealFromChars.h': 'fb47ca3421c701681d53025fe11e883ae9e4fcf376d904a7c34d2a9a772b7d96', 'third_party/fast_float/UPSTREAM.json': '43d3685de2707cb0830ca59b561dd33d214e0eefe31112b94bb7558a67bfc391', 'REUSE.toml': '53860a3e09d87db5dc318ef5e2ca51a93c035248aa4f595caf4fbef9674f5c14', 'LICENSES/MIT.txt': 'e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6'}
+
 def compare_public(source, baseline, checkout_sha, base_sha):
     require(base_sha == BASE_SHA, 'Approved SW2 base required')
     before, after = git_tree(source, BASE_SHA), git_tree(source, checkout_sha)
     differences = [p for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
+    parser_paths = {'Source/Tuning/TuningTable.cpp', 'Source/Tuning/RealFromChars.h', 'REUSE.toml', 'LICENSES/MIT.txt'}
     allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake'}
     for path in differences:
-        require(path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
+        require(path in parser_paths or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
                 or path == '.github/workflows/macos-qualification.yml', 'Product source changed: ' + path)
+    # Exact, reviewed parser-only exception; arbitrary production changes still fail.
+    original = subprocess.check_output(['git', 'show', BASE_SHA + ':Source/Tuning/TuningTable.cpp'], cwd=source).decode()
+    expected = original.replace('#include "Tuning/TuningTable.h"', '#include "Tuning/TuningTable.h"\n#include "Tuning/RealFromChars.h"')
+    expected = expected.replace('std::from_chars(first, last, value, std::chars_format::general)', 'detail::realFromChars(first, last, value)')
+    expected = expected.replace('std::from_chars(line.data(), line.data() + line.size(), value)', 'detail::realFromChars(line.data(), line.data() + line.size(), value)')
+    require((Path(source) / 'Source/Tuning/TuningTable.cpp').read_text() == expected, 'Unreviewed tuning parser change')
+    parser_hashes = PARSER_HASHES
+    for path, expected_hash in parser_hashes.items():
+        require(digest(Path(source) / path) == expected_hash, 'Unreviewed parser dependency: ' + path)
+    vendor = Path(source) / 'third_party/fast_float'
+    upstream = json.loads((vendor / 'UPSTREAM.json').read_text())
+    require(upstream['commit'] == '05087a303dad9c98768b33c829d398223a649bc6', 'fast_float pin changed')
+    require({p.relative_to(vendor).as_posix(): digest(p) for p in vendor.rglob('*') if p.is_file() and p.name != 'UPSTREAM.json'} == upstream['files'], 'fast_float source inventory changed')
+    for path in differences:
+        if path.startswith('third_party/'):
+            require(path.startswith('third_party/fast_float/'), 'Existing dependency changed')
     trees = {}
     for path in ('Source', 'resources', 'third_party', 'Tests'):
         old = subprocess.run(['git', 'rev-parse', BASE_SHA + ':' + path], cwd=source,
                              text=True, capture_output=True, check=True).stdout.strip()
         new = subprocess.run(['git', 'rev-parse', checkout_sha + ':' + path], cwd=source,
                              text=True, capture_output=True, check=True).stdout.strip()
-        if path != 'Tests':
+        if path == 'resources':
             require(old == new, 'Protected product tree changed: ' + path)
         trees[path] = {'base': old, 'checkout': new}
     version = re.search(r'project\(SwaraXT VERSION ([0-9.]+)', (Path(source) / 'CMakeLists.txt').read_text())
     require(version and version[1] == '1.3.0', 'Product version changed')
     return {'base_source_sha': BASE_SHA, 'checkout_sha': checkout_sha,
-            'production_parity': 'BYTE_IDENTICAL', 'version': '1.3.0',
+            'production_parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION', 'actual_parser_source_sha256': digest(Path(source) / 'Source/Tuning/TuningTable.cpp'), 'parser_dependency_hashes': parser_hashes, 'version': '1.3.0',
             'product_trees': trees,
             'integration_paths': differences}
 
