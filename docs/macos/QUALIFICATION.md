@@ -57,3 +57,16 @@ Shared CMake changes admit Apple test aggregation, enable Objective-C/Objective-
 and extend the existing build-owned MIDI-capacity overlay to JUCE's .mm module.
 Linux/Windows branches of those hooks are unchanged. Apple uses unshared test
 compilation until its current sharing implementation is separately reviewed.
+
+## Scheduling independence
+
+The universal candidate is cross-compiled on macos-15-intel after Intel preflight.
+Its host argument is x86_64 while CMake still requests both arm64 and x86_64
+and lipo verifies both slices. Smoke jobs depend on the immutable candidate;
+each verifies its own native source/toolchain context before executing it.
+Dedicated ARM64 preflight, smoke and all native profiles remain required.
+Both preflight jobs must succeed for the full final gate. An Intel-built universal
+candidate is BUILD_PASS_UNQUALIFIED, never ARM64 runtime acceptance. Different
+source revisions have separate concurrency groups so an older valid queued
+ARM64 request does not block a scheduling-corrected build. Same-revision runs
+remain serialized. No runner queue is treated as a product compilation failure.

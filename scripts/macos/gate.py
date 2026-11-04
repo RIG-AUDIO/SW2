@@ -36,7 +36,7 @@ def evaluate(root, args):
                     'Required job failed, missing, cancelled or skipped: ' + job)
     expected = {('preflight', a, 'Release') for a in ('arm64', 'x86_64')}
     if args.mode != 'preflight':
-        expected.add(('universal', 'arm64', 'Release'))
+        expected.add(('universal', 'x86_64', 'Release'))
     if args.mode in ('smoke', 'full'):
         expected |= {('smoke', a, 'Release') for a in ('arm64', 'x86_64')}
     if args.mode == 'full':
@@ -98,7 +98,7 @@ def evaluate(root, args):
                 require(match and int(match[1]) >= 100 and int(match[2]) == 0, 'Extensive VST3 results incomplete')
         found[key] = data
     require(set(found) == expected, 'Failed, missing, skipped or cancelled required stage')
-    universal = found.get(('universal', 'arm64', 'Release'))
+    universal = found.get(('universal', 'x86_64', 'Release'))
     if universal:
         require(universal['universal_build']['ci_bundle_signature'] == SEAL, 'Candidate seal status mismatch')
         require(universal['universal_build']['qualification_status'] == 'BUILD_PASS_UNQUALIFIED', 'Candidate cannot claim full qualification')
