@@ -153,15 +153,23 @@ def git_tree(source, ref):
 
 PARSER_HASHES = {'Source/Tuning/RealFromChars.h': 'fb47ca3421c701681d53025fe11e883ae9e4fcf376d904a7c34d2a9a772b7d96', 'third_party/fast_float/UPSTREAM.json': '43d3685de2707cb0830ca59b561dd33d214e0eefe31112b94bb7558a67bfc391', 'REUSE.toml': '53860a3e09d87db5dc318ef5e2ca51a93c035248aa4f595caf4fbef9674f5c14', 'LICENSES/MIT.txt': 'e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6'}
 
+APPLE_GUARD_TEST = 'Tests/avrlib_hd/UpperRegisterOscillatorTestsMain.cpp'
+APPLE_GUARD_TEST_SHA256 = '1fcf09b4c4413d3b08470dd370e5edbce83d9b648822a1c52b5344c7b48f91f1'
+
+def verify_apple_guard_test(source):
+    require(digest(Path(source) / APPLE_GUARD_TEST) == APPLE_GUARD_TEST_SHA256,
+            'Unreviewed Apple guard-page test integration')
+
 def compare_public(source, baseline, checkout_sha, base_sha):
     require(base_sha == BASE_SHA, 'Approved SW2 base required')
     before, after = git_tree(source, BASE_SHA), git_tree(source, checkout_sha)
     differences = [p for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
     parser_paths = {'Source/Plugin/SwaraXtParameterLayout.cpp', 'Source/Tuning/TuningTable.cpp', 'Source/Tuning/RealFromChars.h', 'REUSE.toml', 'LICENSES/MIT.txt'}
-    allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake'}
+    allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake', APPLE_GUARD_TEST}
     for path in differences:
         require(path in parser_paths or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
                 or path in ('.github/workflows/macos-qualification.yml', '.github/workflows/macos-development-build.yml', '.github/workflows/macos-intel-native-diagnostics.yml'), 'Product source changed: ' + path)
+    verify_apple_guard_test(source)
     # Exact, reviewed parser-only exception; arbitrary production changes still fail.
     original = subprocess.check_output(['git', 'show', BASE_SHA + ':Source/Tuning/TuningTable.cpp'], cwd=source).decode()
     expected = original.replace('#include "Tuning/TuningTable.h"', '#include "Tuning/TuningTable.h"\n#include "Tuning/RealFromChars.h"')

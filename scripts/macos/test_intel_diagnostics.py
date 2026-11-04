@@ -7,7 +7,15 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from intel_diagnostics import DiagnosticCampaign,CANDIDATE_SHA,ARCHIVE_SHA256
+from policy import APPLE_GUARD_TEST, verify_apple_guard_test
 class DiagnosticControls(unittest.TestCase):
+    def test_guard_test_exception_is_exact(self):
+        source=Path(__file__).resolve().parents[2]
+        verify_apple_guard_test(source)
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/APPLE_GUARD_TEST;path.parent.mkdir(parents=True)
+            path.write_text((source/APPLE_GUARD_TEST).read_text()+'\n// unexpected change\n')
+            with self.assertRaisesRegex(RuntimeError,'guard-page'):verify_apple_guard_test(d)
     def test_crash_stays_failure_even_if_debugger_exits_zero(self):
         c=DiagnosticCampaign.__new__(DiagnosticCampaign);c.args=SimpleNamespace(profile='Release')
         with patch('ci.Campaign.run',side_effect=[-6,0]) as run:

@@ -11,7 +11,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -199,7 +199,7 @@ void testGuardPage() {
   std::printf("guard-page upper-register renders completed\n");
 }
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 
 class GuardWave {
  public:
@@ -250,6 +250,10 @@ void checkChild(Operation operation, bool expectFault) {
     // The deliberate protection probe must terminate through the kernel signal,
     // including when a sanitizer otherwise installs its own signal handler.
     std::signal(SIGSEGV, SIG_DFL);
+#ifdef __APPLE__
+    // Darwin may deliver SIGBUS for an inaccessible mapped page.
+    std::signal(SIGBUS, SIG_DFL);
+#endif
     alarm(5);
     const int before = gFailures;
     operation();
@@ -261,12 +265,17 @@ void checkChild(Operation operation, bool expectFault) {
   expect(waited == pid, "guard child reaped");
   if (waited != pid)
     return;
-  const bool valid = expectFault ? WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV
+  const bool protectionFault = WIFSIGNALED(status) && (WTERMSIG(status) == SIGSEGV
+#ifdef __APPLE__
+                                                       || WTERMSIG(status) == SIGBUS
+#endif
+                                                       );
+  const bool valid = expectFault ? protectionFault
                                 : WIFEXITED(status) && WEXITSTATUS(status) == 0;
   if (!valid)
     std::fprintf(stderr, "guard child status=%d expected=%s\n", status,
-                 expectFault ? "SIGSEGV" : "exit 0");
-  expect(valid, expectFault ? "protected access raises exactly SIGSEGV"
+                 expectFault ? "protection fault" : "exit 0");
+  expect(valid, expectFault ? "protected access raises a protection fault"
                            : "production guard render exits successfully");
 }
 
@@ -313,7 +322,7 @@ void testGuardPage() {
   table[17] = table[18] = full.data;
   table[10] = blocked.data;
   for (int note : {124, 125, 126, 127}) render(avrlib_hd::kRealSquare, note, 0);
-  std::printf("Linux guard-page controls and upper-register renders completed\n");
+  std::printf("POSIX guard-page controls and upper-register renders completed\n");
 }
 
 #endif

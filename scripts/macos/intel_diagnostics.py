@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 import subprocess
 from ci import Campaign, SOURCE, digest
-from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path
+from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path, APPLE_GUARD_TEST, verify_apple_guard_test
 
 CANDIDATE_SHA='3a287d0764cbbd57285582a25aa41b58ed6b03b1'
 CANDIDATE_RUN='41924729723'
@@ -50,7 +50,8 @@ class DiagnosticCampaign(Campaign):
             'target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)'+visibility_hook)
         require((SOURCE/'Tests/Apple/CMakeLists.txt').read_text()==expected_tests,'Unreviewed host visibility integration')
         test_diff=subprocess.check_output(['git','diff','--name-only',CANDIDATE_SHA,'HEAD','--','Tests'],cwd=SOURCE,text=True).splitlines()
-        require(test_diff==['Tests/Apple/CMakeLists.txt'],'Current regression drivers differ from approved candidate')
+        require(test_diff==['Tests/Apple/CMakeLists.txt',APPLE_GUARD_TEST],'Current regression drivers differ from approved candidate')
+        verify_apple_guard_test(SOURCE)
         bundles=[self.args.candidate/'Swara XT.component',self.args.candidate/'Swara XT.vst3']
         for bundle in bundles:
             require(check_bundle(bundle,self.version,['arm64','x86_64'])==manifest['binaries'][bundle.name],'Candidate binary identity mismatch')
