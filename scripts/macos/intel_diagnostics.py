@@ -45,8 +45,9 @@ class DiagnosticCampaign(Campaign):
             after=subprocess.check_output(['git','rev-parse','HEAD:'+path],cwd=SOURCE,text=True).strip()
             require(before==after,'Diagnostic checkout differs from approved candidate: '+path)
         original_tests=subprocess.check_output(['git','show',CANDIDATE_SHA+':Tests/Apple/CMakeLists.txt'],cwd=SOURCE,text=True)
+        visibility_hook = "\n# Isolate the host's statically linked JUCE from loaded plugin modules.\ntarget_compile_options(SwaraXTApplePluginHost PRIVATE\n    \"$<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-fvisibility=hidden;-fvisibility-inlines-hidden>\")"
         expected_tests=original_tests.replace('target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)',
-            "target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)\n# Isolate the host's statically linked JUCE from loaded plugin modules.\nset_target_properties(SwaraXTApplePluginHost PROPERTIES\n    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES)")
+            'target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)'+visibility_hook)
         require((SOURCE/'Tests/Apple/CMakeLists.txt').read_text()==expected_tests,'Unreviewed host visibility integration')
         test_diff=subprocess.check_output(['git','diff','--name-only',CANDIDATE_SHA,'HEAD','--','Tests'],cwd=SOURCE,text=True).splitlines()
         require(test_diff==['Tests/Apple/CMakeLists.txt'],'Current regression drivers differ from approved candidate')

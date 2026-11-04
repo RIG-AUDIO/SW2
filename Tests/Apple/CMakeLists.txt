@@ -10,8 +10,8 @@ target_compile_definitions(SwaraXTApplePluginHost PRIVATE
     SWARAXT_EXPECTED_PRODUCT_VERSION="${PROJECT_VERSION}")
 target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)
 # Isolate the host's statically linked JUCE from loaded plugin modules.
-set_target_properties(SwaraXTApplePluginHost PROPERTIES
-    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES)
+target_compile_options(SwaraXTApplePluginHost PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-fvisibility=hidden;-fvisibility-inlines-hidden>")
 
 juce_add_console_app(SwaraXTChannelTypeContractTests PRODUCT_NAME "SwaraXTChannelTypeContractTests")
 juce_generate_juce_header(SwaraXTChannelTypeContractTests)

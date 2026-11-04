@@ -14,6 +14,10 @@ class DiagnosticControls(unittest.TestCase):
             self.assertEqual(c.run('actual-AU',['host','AU','candidate','image'],expected=None,login=True),-6)
             self.assertEqual(run.call_count,2)
             self.assertIn('thread backtrace all',run.call_args_list[1].args[1])
+    def test_host_visibility_covers_objective_cpp(self):
+        text=(Path(__file__).resolve().parents[2]/'Tests/Apple/CMakeLists.txt').read_text()
+        self.assertIn('COMPILE_LANGUAGE:CXX,OBJCXX',text)
+        self.assertIn('-fvisibility=hidden;-fvisibility-inlines-hidden',text)
     def test_wrong_candidate_origin_is_rejected(self):
         with tempfile.TemporaryDirectory() as d:
             c=DiagnosticCampaign.__new__(DiagnosticCampaign);c.args=SimpleNamespace(candidate=Path(d))

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 MontroneDSP
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Manual Intel native diagnostics
-# Focused host symbol-isolation control; plugin candidate remains unchanged.
+# Focused host symbol-isolation control covers both C++ and Objective-C++ objects.
 on:
   workflow_dispatch:
     inputs:
