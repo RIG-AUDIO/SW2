@@ -1,0 +1,70 @@
+{
+  "decision": "PASS",
+  "baseline_commit": "ce9d2512beb3398a2e628e1ae4a32650de3d87b6",
+  "juce_sha": "e18f7f506c0b96f2c738a0bcd7fe6467a5005ad8",
+  "comparison": "actual APVTS parameter ID/version/range/default; normalized, physical and host float bits; locale variants",
+  "original_output_sha256": "b1a5b7aed1064f8c676eef6c9c5b256e3834f6f6745f9f20ccc957840c27a424",
+  "portable_output_sha256": "b1a5b7aed1064f8c676eef6c9c5b256e3834f6f6745f9f20ccc957840c27a424",
+  "case_summary": "cases_per_locale=46 executed_locales=5 failures=0",
+  "actual_parameter_source_sha256": "a3913009eb5fb98a81b036b6da4940d304a81c4298749332b0f827d62ab5be8b",
+  "compiler": "c++ (GCC) 15.1.1 20250425",
+  "numerical_cases": 71602,
+  "numerical_differences": 0,
+  "earlier_tuning_scala_regressions": "PASS",
+  "call_site_audit": {
+    "status": "COMPLETE",
+    "unresolved_apple_portability_risks": [],
+    "occurrences": [
+      {
+        "file": "Source/Plugin/SwaraXtParameterLayout.cpp",
+        "line": 111,
+        "classification": "ALREADY_PORTABLY_WRAPPED"
+      },
+      {
+        "file": "Source/Tuning/RealFromChars.h",
+        "line": 17,
+        "classification": "GUARDED_FLOATING_OVERLOAD",
+        "reason": "capability probe or supported-standard-library forwarding; Apple fallback retained"
+      },
+      {
+        "file": "Source/Tuning/RealFromChars.h",
+        "line": 29,
+        "classification": "GUARDED_FLOATING_OVERLOAD",
+        "reason": "capability probe or supported-standard-library forwarding; Apple fallback retained"
+      },
+      {
+        "file": "Source/Tuning/RealFromChars.h",
+        "line": 44,
+        "classification": "GUARDED_FLOATING_OVERLOAD",
+        "reason": "capability probe or supported-standard-library forwarding; Apple fallback retained"
+      },
+      {
+        "file": "Source/Tuning/TuningTable.cpp",
+        "line": 115,
+        "classification": "INTEGER_OVERLOAD",
+        "reason": "parseFullInteger long long and standardPitch long long denominator"
+      },
+      {
+        "file": "Source/Tuning/TuningTable.cpp",
+        "line": 360,
+        "classification": "INTEGER_OVERLOAD",
+        "reason": "parseFullInteger long long and standardPitch long long denominator"
+      },
+      {
+        "file": "Source/Tuning/TuningTable.cpp",
+        "line": 148,
+        "classification": "ALREADY_PORTABLY_WRAPPED"
+      },
+      {
+        "file": "Source/Tuning/TuningTable.cpp",
+        "line": 333,
+        "classification": "ALREADY_PORTABLY_WRAPPED"
+      }
+    ]
+  },
+  "test_files_sha256": {
+    "scripts/macos/cutoff/CMakeLists.txt": "85e747ed9893b7c3f5e189e73bd2ad21592bdf5a2bf704bdbba6188ce7556d3a",
+    "scripts/macos/cutoff/qualify.py": "11ab97526e5a88ba933caca80495ce273009183a0077741ec153d0bbc069a706",
+    "scripts/macos/cutoff/CutoffParameterTests.cpp": "a985b72bb9b96097747f948585df9b86c26cae952c2ede1d09e387b233c4a1c1"
+  }
+}

@@ -157,7 +157,7 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     require(base_sha == BASE_SHA, 'Approved SW2 base required')
     before, after = git_tree(source, BASE_SHA), git_tree(source, checkout_sha)
     differences = [p for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
-    parser_paths = {'Source/Tuning/TuningTable.cpp', 'Source/Tuning/RealFromChars.h', 'REUSE.toml', 'LICENSES/MIT.txt'}
+    parser_paths = {'Source/Plugin/SwaraXtParameterLayout.cpp', 'Source/Tuning/TuningTable.cpp', 'Source/Tuning/RealFromChars.h', 'REUSE.toml', 'LICENSES/MIT.txt'}
     allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake'}
     for path in differences:
         require(path in parser_paths or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
@@ -168,6 +168,10 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     expected = expected.replace('std::from_chars(first, last, value, std::chars_format::general)', 'detail::realFromChars(first, last, value)')
     expected = expected.replace('std::from_chars(line.data(), line.data() + line.size(), value)', 'detail::realFromChars(line.data(), line.data() + line.size(), value)')
     require((Path(source) / 'Source/Tuning/TuningTable.cpp').read_text() == expected, 'Unreviewed tuning parser change')
+    cutoff_original = subprocess.check_output(['git', 'show', BASE_SHA + ':Source/Plugin/SwaraXtParameterLayout.cpp'], cwd=source).decode()
+    cutoff_expected = cutoff_original.replace('#include "Plugin/SwaraXtParameterLayout.h"', '#include "Plugin/SwaraXtParameterLayout.h"\n#include "Tuning/RealFromChars.h"')
+    cutoff_expected = cutoff_expected.replace('std::from_chars(first, last, number, std::chars_format::general)', 'tuning::detail::realFromChars(first, last, number)')
+    require((Path(source) / 'Source/Plugin/SwaraXtParameterLayout.cpp').read_text() == cutoff_expected, 'Unreviewed Filter Cutoff parser change')
     parser_hashes = PARSER_HASHES
     for path, expected_hash in parser_hashes.items():
         require(digest(Path(source) / path) == expected_hash, 'Unreviewed parser dependency: ' + path)
@@ -190,7 +194,7 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     version = re.search(r'project\(SwaraXT VERSION ([0-9.]+)', (Path(source) / 'CMakeLists.txt').read_text())
     require(version and version[1] == '1.3.0', 'Product version changed')
     return {'base_source_sha': BASE_SHA, 'checkout_sha': checkout_sha,
-            'production_parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION', 'actual_parser_source_sha256': digest(Path(source) / 'Source/Tuning/TuningTable.cpp'), 'parser_dependency_hashes': parser_hashes, 'version': '1.3.0',
+            'production_parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION', 'actual_parser_source_sha256': digest(Path(source) / 'Source/Tuning/TuningTable.cpp'), 'actual_cutoff_source_sha256': digest(Path(source) / 'Source/Plugin/SwaraXtParameterLayout.cpp'), 'parser_dependency_hashes': parser_hashes, 'version': '1.3.0',
             'product_trees': trees,
             'integration_paths': differences}
 

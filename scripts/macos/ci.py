@@ -86,6 +86,7 @@ class Campaign(PublicInfrastructure):
         self.verify_source()
         require(platform.system() == 'Darwin' and platform.machine() == self.args.arch, "Qualification invariant: platform.system() == 'Darwin' and platform.machine() == self.args.arch")
         self.run('ci-harness-regression', [sys.executable, SOURCE / 'scripts/macos/test_ci.py'])
+        self.run('floating-call-site-audit', [sys.executable, SOURCE / 'scripts/macos/audit_from_chars.py', '--output', self.root / 'floating-call-sites.json'])
         require(subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, text=True, timeout=120).strip() == self.report['source_sha'], "Qualification invariant: subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, text=True).strip() == self.report['source_sha']")
         # The pinned historical dependency contains git:// nested URLs. Use
         # HTTPS for transport without changing any recorded dependency commit.
@@ -235,12 +236,14 @@ class Campaign(PublicInfrastructure):
             compiled[str(path)] = digest(path)
         compiled_manifest = {'checkout_sha': self.report['source_sha'], 'files': compiled,
                              'actual_parser_source_sha256': digest(SOURCE / 'Source/Tuning/TuningTable.cpp'),
+                             'actual_cutoff_source_sha256': digest(SOURCE / 'Source/Plugin/SwaraXtParameterLayout.cpp'),
                              'parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION'}
         compiled_file = self.root / 'compiled-source-manifest.json'
         compiled_file.write_text(json.dumps(compiled_manifest, indent=2) + '\n')
         shutil.copy2(compiled_file, stage / compiled_file.name)
         self.report['compiled_source_manifest_sha256'] = digest(compiled_file)
         self.report['actual_parser_source_sha256'] = compiled_manifest['actual_parser_source_sha256']
+        self.report['actual_cutoff_source_sha256'] = compiled_manifest['actual_cutoff_source_sha256']
         files = files_manifest(stage)
         manifest = {'source_sha': self.report['source_sha'], 'juce_sha': JUCE_SHA,
                     'dependency_overlay': self.report['dependency_overlay'],
@@ -250,6 +253,7 @@ class Campaign(PublicInfrastructure):
                     'base_source_sha': self.args.base_source_sha, 'version': self.version,
                     'compiled_source_manifest_sha256': self.report['compiled_source_manifest_sha256'],
                     'actual_parser_source_sha256': self.report['actual_parser_source_sha256'],
+                    'actual_cutoff_source_sha256': self.report['actual_cutoff_source_sha256'],
                     'qualification_status': 'BUILD_PASS_UNQUALIFIED', 'formats': ['AU', 'VST3'],
                     'standalone': False, 'ci_bundle_signature': self.report['ci_bundle_signature'],
                     'binaries': binaries, 'files': files,
@@ -367,9 +371,9 @@ class Campaign(PublicInfrastructure):
     def smoke(self, juce):
         build, config = self.configure(juce)
         self.run('build-smoke-tools', ['cmake', '--build', build, '--target',
-                 'SwaraXTApplePluginHost', 'SwaraXTChannelTypeContractTests', 'SwaraXTTuningTableTests', 'SwaraXTTuningFuzzRegressionTests', 'SwaraXTQuantizerTests', '--parallel', '2'])
+                 'SwaraXTApplePluginHost', 'SwaraXTChannelTypeContractTests', 'SwaraXTTuningTableTests', 'SwaraXTTuningFuzzRegressionTests', 'SwaraXTQuantizerTests', 'SwaraXTCutoffParameterTests', '--parallel', '2'])
         self.run('channel-domain-smoke', ['ctest', '--test-dir', build, '--output-on-failure',
-                 '--no-tests=error', '-R', '^(SwaraXTChannelTypeContractTests|SwaraXTTuningTableTests|SwaraXTTuningFuzzRegressionTests|SwaraXTQuantizerTests)$'])
+                 '--no-tests=error', '-R', '^(SwaraXTChannelTypeContractTests|SwaraXTTuningTableTests|SwaraXTTuningFuzzRegressionTests|SwaraXTQuantizerTests|SwaraXTCutoffParameterTests)$'])
         host = build / 'Tests/Apple/SwaraXTApplePluginHost_artefacts' / config / 'SwaraXTApplePluginHost'
         require(self.actual_hosts(host, self.verified_candidate()), 'Actual native product smoke failed')
         self.report['qualification_scope'] = 'EARLY_NATIVE_HOST_SMOKE_ONLY'

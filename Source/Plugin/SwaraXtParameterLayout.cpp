@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Plugin/SwaraXtParameterLayout.h"
+#include "Tuning/RealFromChars.h"
 
 #include "shruthi/patch.h"
 
@@ -107,7 +108,7 @@ juce::AudioParameterFloat* cutoffParam()
             const char* first = utf8.getAddress();
             const char* last = first + s.getNumBytesAsUTF8();
             double number = 0.0;
-            const auto parsed = std::from_chars(first, last, number, std::chars_format::general);
+            const auto parsed = tuning::detail::realFromChars(first, last, number);
             const double value = number * scale;
             if (parsed.ec != std::errc() || parsed.ptr != last || ! std::isfinite(value))
                 return minimumHz;
