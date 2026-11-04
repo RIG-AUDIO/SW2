@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 MontroneDSP
 # SPDX-License-Identifier: GPL-3.0-or-later
 name: Manual Intel native diagnostics
+# Focused host symbol-isolation control; plugin candidate remains unchanged.
 on:
   workflow_dispatch:
     inputs:

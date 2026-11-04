@@ -40,10 +40,16 @@ class DiagnosticCampaign(Campaign):
         require(files_manifest(self.args.candidate)==manifest['files'],'Candidate checksum inventory mismatch')
         require(digest(self.args.candidate/'compiled-source-manifest.json')==manifest['compiled_source_manifest_sha256'],'Compiled-source provenance mismatch')
         # Different CI revisions are permitted only with byte-identical product/test inputs.
-        for path in ('Source','resources','third_party','Tests'):
+        for path in ('Source','resources','third_party'):
             before=subprocess.check_output(['git','rev-parse',CANDIDATE_SHA+':'+path],cwd=SOURCE,text=True).strip()
             after=subprocess.check_output(['git','rev-parse','HEAD:'+path],cwd=SOURCE,text=True).strip()
             require(before==after,'Diagnostic checkout differs from approved candidate: '+path)
+        original_tests=subprocess.check_output(['git','show',CANDIDATE_SHA+':Tests/Apple/CMakeLists.txt'],cwd=SOURCE,text=True)
+        expected_tests=original_tests.replace('target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)',
+            "target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)\n# Isolate the host's statically linked JUCE from loaded plugin modules.\nset_target_properties(SwaraXTApplePluginHost PROPERTIES\n    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES)")
+        require((SOURCE/'Tests/Apple/CMakeLists.txt').read_text()==expected_tests,'Unreviewed host visibility integration')
+        test_diff=subprocess.check_output(['git','diff','--name-only',CANDIDATE_SHA,'HEAD','--','Tests'],cwd=SOURCE,text=True).splitlines()
+        require(test_diff==['Tests/Apple/CMakeLists.txt'],'Current regression drivers differ from approved candidate')
         bundles=[self.args.candidate/'Swara XT.component',self.args.candidate/'Swara XT.vst3']
         for bundle in bundles:
             require(check_bundle(bundle,self.version,['arm64','x86_64'])==manifest['binaries'][bundle.name],'Candidate binary identity mismatch')
