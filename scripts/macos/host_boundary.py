@@ -1,22 +1,36 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 MontroneDSP
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Three representative runtime host traces, not native-reference admission."""
+"""Focused runtime host traces and controlled portability experiments."""
 import argparse
+import csv
 import json
 import os
 from pathlib import Path
+import re
 import shutil
+import statistics
 import subprocess
 from ci import Campaign,SOURCE,digest
-from parity_probe import once
+from parity_probe import once,capture_driver,required_commands
 from policy import require,hosted_root
 
 BASELINE='99885a8eeaaa0d0e6773ca11abf15237786218d4'
 TARGETS={'classic':'SwaraXTAudioParityTests','dual':'SwaraXTDualSvfIntegrationAudit','looper':'SwaraXTDspFxIntegratedExactParityTests'}
 DRIVERS={'classic':'Tests/AudioRegression/AudioRegressionTestsMain.cpp','dual':'Tests/Filter/DualSvfIntegrationAuditMain.cpp','looper':'Tests/Parity/DspFxIntegratedExactParityTestsMain.cpp'}
+SRC_TEST='SwaraXTHostSrcExactParityTests'
+SRC_DRIVER='Tests/Parity/HostSrcExactParityTestsMain.cpp'
 
-def patched_source(relative,text,strict=False):
+def patched_source(relative,text,strict=False,decision=False):
+    # The decision runs keep instrumentation out of the SRC and DC kernels.
+    # An observer in the tap loop can change ARM64 vectorization/contraction.
+    if decision and relative!='Engine/DspBoard/BoardEffects.cpp':
+        if not strict:
+            return text
+        signature = ('float PolyphaseFirResampler<T, P, I>::readInterpolated() noexcept' if relative.endswith('.h')
+                     else 'float DcBlocker::process(float sample) noexcept')
+        anchor=signature+'\n{'
+        return once(text,anchor,anchor+'\n#pragma clang fp contract(off)')
     if relative=='Engine/SampleRate/PolyphaseFirResampler.h':
         text='#include "host_trace.h"\n'+text
         text=once(text,'            sum += value;',
@@ -52,14 +66,30 @@ def patched_source(relative,text,strict=False):
         text=once(text,anchor,anchor+'\n    swaraxt_host_trace::dc(sample,x1_,y1_,pole_,y);')
         if strict:text=once(text,'float DcBlocker::process(float sample) noexcept\n{','float DcBlocker::process(float sample) noexcept\n{\n#pragma clang fp contract(off)')
     elif relative=='Engine/DspBoard/BoardEffects.cpp':
+        if decision:
+            text='#include "host_trace.h"\n'+text
+            anchor='    if (increment == 0) increment = 1;\n    for (auto& sample : b)'
+            text=once(text,anchor,'    if (increment == 0) increment = 1;\n'
+                '    swaraxt_host_trace::loopBuffer(line_.data(),line_.size());\n    for (auto& sample : b)')
+            anchor='        loopPhase_ = phaseAdd(loopPhase_, increment);'
+            return once(text,anchor,'        swaraxt_host_trace::loopState(loopPhase_,read,loopPtr_,loopStart_,loopDuration_,increment,sample);\n'+anchor)
         text='#include "host_trace.h"\n'+text
         anchor='        loopPhase_ = phaseAdd(loopPhase_, increment);'
         text=once(text,anchor,'        swaraxt_host_trace::looper(loopPhase_,read,static_cast<uint8_t>(line_[read]),static_cast<uint8_t>(line_[read+1]),static_cast<uint8_t>(loopPhase_),sample);\n'+anchor)
     return text
 
-def driver(source,case):
-    path=source/DRIVERS[case]
+def driver(source,case,decision=False):
+    path=source/(SRC_DRIVER if case=='src' else DRIVERS[case])
     text=path.read_text()
+    if case=='src':
+        return capture_driver(SRC_DRIVER,text)
+    if decision and case=='looper':
+        start=text.index('    {\n        SwaraXtAudioProcessor proc;\n        configureSaw(proc);\n        setInt(proc, swaraxt::IDs::dspFxProgram, 15);')
+        end=text.index('        golden("looper_replay", replay, 2048);',start)
+        fixture=once(text[start:end],'        proc.prepareToPlay(kHostRate, kBlockSize);',
+                     '        swaraxt_host_trace::Scope scope("looper");\n'
+                     '        swaraxt_capture::Stages stages(proc);\n        proc.prepareToPlay(kHostRate, kBlockSize);')
+        return '#include "host_trace.h"\n#include "parity_stages.h"\n'+text[:start]+fixture+text[end:]
     prefix='#include "host_trace.h"\n#include "parity_stages.h"\n#define main originalRegressionMain\n#include "'+path.as_posix()+'"\n#undef main\n'
     if case=='classic':
         body='''
@@ -88,6 +118,23 @@ def driver(source,case):
     check(q20Hash(trace.host)==dualRelativeGoldens[0][0],"original host anchor");
     fixedPipeline(trace,48000,true,0,4,true);
     return failures?1:0;'''
+        if decision:
+            # Test existing current anchors inside the experiment only. The
+            # original integration entry point retains its platform selector.
+            current=path.parent
+            prefix+='''#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__))
+namespace experiment_current {
+#include "'''+str(current/'DualSvfCurrentLinuxGoldens.h')+'''"
+#include "'''+str(current/'DualSvfCurrentWindowsTimingGoldens.h')+'''"
+}
+#else
+namespace experiment_current {
+using ::dualRelativeGoldens;
+using ::dualRelativeNativeGoldens;
+}
+#endif
+'''
+            body=body.replace('==dualRelative','==experiment_current::dualRelative')
     else:
         start=text.index('    {\n        SwaraXtAudioProcessor proc;\n        configureSaw(proc);\n        setInt(proc, swaraxt::IDs::dspFxProgram, 15);')
         end=text.index('        golden("looper_replay", replay, 2048);',start)+len('        golden("looper_replay", replay, 2048);\n    }')
@@ -98,7 +145,7 @@ def driver(source,case):
     original_call='char name[]="original";char* args[]={name};return originalRegressionMain(1,args);' if case=='dual' else 'return originalRegressionMain();'
     return prefix+'int main() {\n    juce::ScopedJuceInitialiser_GUI init;\n    if(std::getenv("SWARA_ORIGINAL_TARGET")) {'+original_call+'}\n'+body+'\n}\n'
 
-def overlay(source,destination,strict=False):
+def overlay(source,destination,strict=False,decision=False):
     destination.mkdir(parents=True,exist_ok=False)
     shutil.copytree(source/'Source',destination/'Source')
     # Several production headers use relative paths into the pinned dependency tree.
@@ -108,14 +155,15 @@ def overlay(source,destination,strict=False):
         if not p.is_file():continue
         relative=p.relative_to(destination/'Source').as_posix()
         original=(source/'Source'/relative).read_bytes()
-        changed=patched_source(relative,original.decode(),strict).encode() if relative in (
+        changed=patched_source(relative,original.decode(),strict,decision).encode() if relative in (
             'Engine/SampleRate/PolyphaseFirResampler.h','Engine/SampleRate/HostResampler.cpp','Engine/DspBoard/BoardEffects.cpp') else original
         p.write_bytes(changed)
         records['Source/'+relative]={'original_sha256':digest(source/'Source'/relative),'compiled_sha256':digest(p)}
     cmake=[]
-    for case,target in TARGETS.items():
-        generated=destination/(case+'.cpp');generated.write_text(driver(source,case))
-        original_name=Path(DRIVERS[case]).name
+    targets={**TARGETS,'src':SRC_TEST} if decision else TARGETS
+    for case,target in targets.items():
+        generated=destination/(case+'.cpp');generated.write_text(driver(source,case,decision))
+        original_name=Path(SRC_DRIVER if case=='src' else DRIVERS[case]).name
         cmake.append(f'''get_target_property(items {target} SOURCES)
 set(replacement)
 foreach(item IN LISTS items)
@@ -141,6 +189,44 @@ target_include_directories(SwaraXTHostBoundaryBench BEFORE PRIVATE "{destination
     (destination/'manifest.json').write_text(json.dumps(records,indent=2)+'\n')
     return records
 
+def output_results(directory,expected):
+    results={}
+    for name,baseline in expected.items():
+        path=directory/name
+        require(path.is_file() and path.stat().st_size>0 and path.stat().st_size%4==0,
+                'Missing or invalid required output '+name)
+        sha=digest(path)
+        results[name]={'sha256':sha,'samples':path.stat().st_size//4,
+                       'native_baseline_identical':sha==baseline['native'],
+                       'intel_current_identical':sha==baseline['intel']}
+    return results
+
+def benchmark_summary(trials):
+    median=statistics.median
+    cpu=[r['ns_per_sample'] for r in trials]
+    center=median(cpu)
+    return {'median_ns_per_sample':center,'mad_ns_per_sample':median(abs(n-center) for n in cpu),
+            'range_ns_per_sample':[min(cpu),max(cpu)],
+            'median_cpu_utilization_percent':median(r['cpu_utilization_percent'] for r in trials),
+            'trials':trials}
+
+def loop_capture(directory):
+    buffer=directory/'looper-buffer.csv'
+    state=directory/'looper-state.csv'
+    native=directory/'stage-0-post.f32'
+    with buffer.open() as stream:
+        samples=list(csv.DictReader(stream))
+    require(len(samples)==1281 and all(int(row['index'])==i and 0<=int(row['byte'])<=255
+            for i,row in enumerate(samples)),'Incomplete looper buffer capture')
+    with state.open() as stream:
+        rows=list(csv.DictReader(stream))
+    require(bool(rows) and all(int(row['sample'])==i and int(row['read'])==((int(row['start'])+(int(row['phase'])>>8))&1023) and
+            0<=int(row['write'])<1024 and int(row['increment'])>0
+            for i,row in enumerate(rows)),'Incomplete looper state capture')
+    require(native.stat().st_size>0 and native.stat().st_size%4==0,'Missing native looper output')
+    return {'buffer_bytes':len(samples),'replay_state_samples':len(rows),'pre_src_samples':native.stat().st_size//4,
+            'sha256':{path.name:digest(path) for path in (buffer,state,native)}}
+
 class BoundaryCampaign(Campaign):
     def run(self,name,argv,**kwargs):
         if name=='configure':
@@ -148,21 +234,48 @@ class BoundaryCampaign(Campaign):
             name='configure-'+self.variant
         return super().run(name,argv,**kwargs)
 
+    def paired_benchmarks(self,binaries):
+        trials={variant:{rate:[] for rate in ('44100','48000')} for variant in binaries}
+        native,strict=binaries
+        for index in range(5):
+            order=(native,strict) if index%2==0 else (strict,native)
+            for variant in order:
+                label=f'paired-cpu-{index}-{variant}'
+                self.run(label,[binaries[variant],'1'],timeout=300)
+                log=(self.root/(label+'.log')).read_text()
+                for rate in trials[variant]:
+                    match=re.search(r'BENCH rate='+rate+r' .*?ns_per_sample=(\S+) hash=(\S+) wall_seconds=(\S+) cpu_utilization_percent=(\S+)',log)
+                    require(match is not None,'Missing benchmark output for '+rate)
+                    ns,sha,wall,cpu=match.groups()
+                    trials[variant][rate].append({'ns_per_sample':float(ns),'hash':sha,'wall_seconds':float(wall),'cpu_utilization_percent':float(cpu)})
+        summary={variant:{rate:benchmark_summary(rows) for rate,rows in rates.items()} for variant,rates in trials.items()}
+        for rates in trials.values():
+            for rows in rates.values():
+                require(len({row['hash'] for row in rows})==1,'Repeated CPU trials produced different output hashes')
+        pairs={rate:[(b['ns_per_sample']/a['ns_per_sample']-1)*100
+                     for a,b in zip(trials[native][rate],trials[strict][rate])] for rate in trials[native]}
+        return {'variants':summary,'strict_minus_native_percent':pairs,
+                'median_paired_percent':{rate:statistics.median(values) for rate,values in pairs.items()}}
+
     def execute(self):
         self.report.update(diagnostic_only=True,full_qualification='BLOCKED',audio_reference_admission='REVIEW_REQUIRED',policies_selected=False)
         try:
             juce=self.prepare()
             require(not subprocess.check_output(['git','diff','--name-only',BASELINE,'HEAD','--','Source','resources','third_party'],cwd=SOURCE,text=True).strip(),'Product differs from preserved captures')
             baselines=json.loads((SOURCE/'scripts/macos/host_boundary_baseline.json').read_text())[self.args.arch]
+            decision=getattr(self.args,'portability_decision',False)
+            targets={**TARGETS,'src':SRC_TEST} if decision else TARGETS
+            expectations=json.loads((SOURCE/'scripts/macos/host_portability_baseline.json').read_text())['architectures'][self.args.arch] if decision else {}
+            benches_by_variant={}
             self.report['variants']={}
             self.overlay_root=self.root/'runtime-overlay'
             for variant in ('native','strict-host-experiment'):
                 self.variant=variant
                 # Strict variant changes only two build-owned function-scoped pragmas.
-                if variant=='native':manifest=overlay(SOURCE,self.overlay_root)
+                if variant=='native':manifest=overlay(SOURCE,self.overlay_root,decision=decision)
                 else:
                     for relative in ('Engine/SampleRate/PolyphaseFirResampler.h','Engine/SampleRate/HostResampler.cpp'):
-                        (self.overlay_root/'Source'/relative).write_text(patched_source(relative,(SOURCE/'Source'/relative).read_text(),True))
+                        (self.overlay_root/'Source'/relative).write_text(patched_source(relative,(SOURCE/'Source'/relative).read_text(),True,decision))
                     manifest={name:{**value,'compiled_sha256':digest(self.overlay_root/name)} for name,value in manifest.items()}
                 (self.root/(variant+'-compiled-source.json')).write_text(json.dumps(manifest,indent=2)+'\n')
                 build,_=self.configure(juce)
@@ -173,31 +286,50 @@ class BoundaryCampaign(Campaign):
                     for relative in ('Engine/SwaraXtEngine.cpp','Engine/SampleRate/HostResampler.cpp','Engine/DspBoard/BoardEffects.cpp'):
                         require(str(self.overlay_root/'Source'/relative) in inputs and str(SOURCE/'Source'/relative) not in inputs,
                                 'Runtime overlay is not active for '+target+': '+relative)
-                self.run('build-'+variant,['cmake','--build',build,'--parallel','2','--target',*TARGETS.values(),'SwaraXTHostBoundaryBench'],timeout=7200)
+                self.run('build-'+variant,['cmake','--build',build,'--parallel','2','--target',*targets.values(),'SwaraXTHostBoundaryBench'],timeout=7200)
                 listing=json.loads(subprocess.check_output(['ctest','--test-dir',build,'--show-only=json-v1'],text=True))
                 (self.root/(variant+'-inventory.json')).write_text(json.dumps(listing,indent=2)+'\n')
-                commands={t['name']:t['command'] for t in listing['tests'] if t['name'] in TARGETS.values()}
-                require(set(commands)==set(TARGETS.values()),'Required runtime target missing')
+                commands=required_commands(listing,targets.values())
                 record={'cases':{}}
                 self.report['variants'][variant]=record
                 if variant=='native' and self.args.arch=='x86_64':
                     self.run('intel-original-integration',['ctest','--test-dir',build,'-R','^SwaraXTDualSvfIntegrationAudit$','--output-on-failure','--no-tests=error','--output-junit',self.root/'intel-integration.xml'],
                         env={**self.env,'SWARA_ORIGINAL_TARGET':'1'},expected=0,timeout=600)
                     record['original_full_integration']='PASS'
-                for case,target in TARGETS.items():
+                for case,target in targets.items():
                     binary=Path(commands[target][0]);require(binary.is_file(),'Runtime executable missing')
                     require(subprocess.check_output(['lipo','-archs',binary],text=True).split()==[self.args.arch],'Wrong native architecture')
                     directory=self.root/'boundary'/variant/case;directory.mkdir(parents=True)
                     env={**self.env,'SWARA_HOST_TRACE_DIR':str(directory),'SWARA_CURRENT_REFERENCE_DIR':str(directory)}
                     code=self.run(variant+'-'+case,[binary],expected=None,env=env,timeout=600)
                     require(code in (0,1),'Runtime diagnostic crashed or timed out')
-                    baseline_equal=digest(directory/'final.f32')==baselines[case]
-                    require(variant!='native' or baseline_equal,'Observation changed the preserved native output: '+case)
-                    record['cases'][case]={'original_assertion_exit_code':int(code),'baseline_output_identical':baseline_equal,'binary_sha256':digest(binary)}
+                    if decision:
+                        outputs=output_results(directory,expectations[case])
+                        record['cases'][case]={'original_assertion_exit_code':int(code),'outputs':outputs,
+                            'baseline_output_identical':all(x['native_baseline_identical'] for x in outputs.values()),
+                            'current_exact_pass':code==0 and all(x['intel_current_identical'] for x in outputs.values()),'binary_sha256':digest(binary)}
+                        if case=='looper':record['cases'][case]['looper_internal']=loop_capture(directory)
+                    else:
+                        baseline_equal=digest(directory/'final.f32')==baselines[case]
+                        require(variant!='native' or baseline_equal,'Observation changed the preserved native output: '+case)
+                        record['cases'][case]={'original_assertion_exit_code':int(code),'baseline_output_identical':baseline_equal,'binary_sha256':digest(binary)}
                     self.save()
                 benches=list(build.rglob('SwaraXTHostBoundaryBench'));require(len(benches)==1,'Benchmark missing')
-                self.run('cpu-'+variant,[benches[0]],timeout=300)
+                if decision:
+                    copied=self.root/('bench-'+variant)
+                    shutil.copy2(benches[0],copied)
+                    require(subprocess.check_output(['lipo','-archs',copied],text=True).split()==[self.args.arch],'Wrong benchmark architecture')
+                    record['benchmark_sha256']=digest(copied)
+                    benches_by_variant[variant]=copied
+                else:
+                    self.run('cpu-'+variant,[benches[0]],timeout=300)
                 self.report['variants'][variant]=record;self.save()
+            if decision:
+                self.report['paired_benchmarks']=self.paired_benchmarks(benches_by_variant)
+                native,strict=self.report['variants'].values()
+                self.report['native_observations_reproduced']=all(case['baseline_output_identical'] for case in native['cases'].values())
+                self.report['strict_current_exact_pass']=all(case['current_exact_pass'] for case in strict['cases'].values())
+                self.report['looper_native_strict_internal_identical']=native['cases']['looper']['looper_internal']==strict['cases']['looper']['looper_internal']
             self.report['capture_manifest']={p.relative_to(self.root/'boundary').as_posix():{'bytes':p.stat().st_size,'sha256':digest(p)} for p in (self.root/'boundary').rglob('*') if p.is_file()}
             require(not subprocess.check_output(['git','status','--porcelain'],cwd=SOURCE,text=True).strip(),'Repository source became dirty')
             self.report['decision']='HOST_BOUNDARY_DIAGNOSTICS_COMPLETE_NOT_QUALIFIED'
@@ -207,6 +339,7 @@ class BoundaryCampaign(Campaign):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--arch',choices=('arm64','x86_64'),required=True);parser.add_argument('--root',type=Path,required=True)
+    parser.add_argument('--portability-decision',action='store_true')
     args=parser.parse_args();hosted_root(args.root,SOURCE)
     args.profile='Release';args.task='host-boundary';args.mode='diagnostic';args.source_sha=os.environ['GITHUB_SHA'];args.base_source_sha='5e7b967db0b52f773f382217a72c6c0c3ff6b8f7'
     BoundaryCampaign(args).execute()

@@ -25,7 +25,7 @@ inline void design(int,int,double,double,double,double,double,double,float,doubl
 inline void normalize(int,int,double,float,float) {}
 #else
 struct Context {
-    std::ofstream src,dc,taps,loop,designed,normalized;
+    std::ofstream src,dc,taps,loop,designed,normalized,loopState;
     std::filesystem::path root;
     uint64_t position=0,loopPosition=0;
     std::string name;
@@ -51,6 +51,10 @@ struct Context {
     ~Context() {
         src.flush();dc.flush();taps.flush();loop.flush();designed.flush();normalized.flush();
         if (!src.good() || !dc.good() || !taps.good() || !loop.good() || !designed.good() || !normalized.good()) std::abort();
+        if (loopState.is_open()) {
+            loopState.flush();
+            if (!loopState.good()) std::abort();
+        }
     }
 };
 inline Context* active=nullptr;
@@ -83,6 +87,21 @@ inline void dc(float input,float x1,float y1,float pole,float output) {
 }
 inline void looper(uint32_t phase,uint32_t read,uint8_t a,uint8_t b,uint8_t fraction,int16_t output) {
     if(active)active->loop<<active->loopPosition++<<','<<phase<<','<<read<<','<<unsigned(a)<<','<<unsigned(b)<<','<<unsigned(fraction)<<','<<output<<'\n';
+}
+inline void loopBuffer(const int8_t* data,size_t count) {
+    if (!active || active->loopState.is_open()) return;
+    std::ofstream buffer(active->root/"looper-buffer.csv");
+    buffer<<"index,byte\n";
+    for (size_t i=0;i<count;++i) buffer<<i<<','<<unsigned(static_cast<uint8_t>(data[i]))<<'\n';
+    buffer.flush();
+    if (!buffer.good()) std::abort();
+    active->loopState.open(active->root/"looper-state.csv");
+    active->loopState<<"sample,phase,read,write,start,duration,increment,output\n";
+}
+inline void loopState(uint32_t phase,uint32_t read,uint16_t write,uint16_t start,
+                      uint16_t duration,uint16_t increment,int16_t output) {
+    if (active) active->loopState<<active->loopPosition++<<','<<phase<<','<<read<<','<<write<<','
+        <<start<<','<<duration<<','<<increment<<','<<output<<'\n';
 }
 inline void design(int phase,int tap,double x,double scaled,double sinc,double ratio,double window,double value,float coefficient,double sum) {
     if(active)active->designed<<phase<<','<<tap<<','<<bits(x)<<','<<bits(scaled)<<','<<bits(sinc)<<','<<bits(ratio)<<','<<bits(window)<<','<<bits(value)<<','<<bits(coefficient)<<','<<bits(sum)<<'\n';

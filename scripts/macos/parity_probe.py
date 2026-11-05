@@ -19,12 +19,12 @@ DRIVERS = {
 SECTION2 = 'SwaraXTDualSvfSection2Tests'
 REQUIRED_TESTS = (*DRIVERS, SECTION2)
 
-def required_commands(listing):
+def required_commands(listing,required=REQUIRED_TESTS):
     """Unbuilt unrelated CTest executables may legitimately lack commands."""
     commands = {}
     for test in listing['tests']:
         name = test.get('name')
-        if name not in REQUIRED_TESTS:
+        if name not in required:
             continue
         require(name not in commands, 'Duplicate required parity target: '+name)
         command = test.get('command')
@@ -32,7 +32,7 @@ def required_commands(listing):
                 all(isinstance(argument, str) for argument in command) and command[0].strip(),
                 'Required parity target lacks an executable command: '+name)
         commands[name] = command
-    missing = sorted(set(REQUIRED_TESTS) - commands.keys())
+    missing = sorted(set(required) - commands.keys())
     require(not missing, 'Missing required parity targets: '+', '.join(missing))
     return commands
 

@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from host_boundary import overlay,patched_source,driver,TARGETS
+from host_boundary import overlay,patched_source,driver,TARGETS,loop_capture,output_results
 from policy import verify_dual_integration_selection,DUAL_INTEGRATION_TEST,BASE_SHA
 
 SOURCE=Path(__file__).resolve().parents[2]
@@ -88,5 +88,59 @@ for(int i=0;i<1024;++i){while(src.size()<src.queueTargetSize()){random=random*16
                 self.assertEqual(len(rows),count)
                 self.assertTrue(all(None not in row for row in rows))
             self.assertEqual((root/'trace/runtime-coefficients.f32').stat().st_size,257*256*4)
+
+    def test_decision_preserves_kernel_sources_and_original_fixture_assertions(self):
+        for relative in ('Engine/SampleRate/PolyphaseFirResampler.h','Engine/SampleRate/HostResampler.cpp'):
+            original=(SOURCE/'Source'/relative).read_text()
+            self.assertEqual(patched_source(relative,original,decision=True),original)
+            strict=patched_source(relative,original,strict=True,decision=True)
+            self.assertEqual(strict.count('#pragma clang fp contract(off)'),1)
+            self.assertEqual(strict.replace('\n#pragma clang fp contract(off)',''),original)
+        original=(SOURCE/'Tests/Parity/DspFxIntegratedExactParityTestsMain.cpp').read_text()
+        generated=driver(SOURCE,'looper',decision=True)
+        for line in original.splitlines():
+            if 'expect(' in line or 'golden(' in line:self.assertIn(line,generated)
+        self.assertIn('swaraxt_capture::Stages stages(proc);',generated)
+
+    def test_exact_output_comparison_requires_each_capture(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);sample=b'\x00\x00\x80\x3f'
+            (root/'required.f32').write_bytes(sample)
+            sha=hashlib.sha256(sample).hexdigest()
+            expected={'required.f32':{'native':sha,'intel':'0'*64}}
+            result=output_results(root,expected)['required.f32']
+            self.assertTrue(result['native_baseline_identical'])
+            self.assertFalse(result['intel_current_identical'])
+            expected['missing.f32']=expected['required.f32']
+            with self.assertRaisesRegex(RuntimeError,'Missing or invalid required output missing.f32'):
+                output_results(root,expected)
+
+    def test_looper_observer_records_complete_buffer_and_playback_state(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);owned=root/'overlay';overlay(SOURCE,owned,decision=True)
+            program=root/'loop.cpp'
+            program.write_text('''#include "host_trace.h"
+#include "Engine/DspBoard/BoardEffects.h"
+int main() {
+    swaraxt_host_trace::Scope scope("looper");
+    swaraxt::board::BoardEffects fx;
+    fx.reset(true);
+    swaraxt::board::Block block{};
+    for (int i=0;i<20;++i) fx.process(block,swaraxt::board::Effect::looper,64,0,120);
+    for (int i=0;i<4;++i) fx.process(block,swaraxt::board::Effect::looper,64,128,120);
+    std::ofstream native(scope.context.root/"stage-0-post.f32",std::ios::binary);
+    const float sample=0.f;
+    native.write(reinterpret_cast<const char*>(&sample),sizeof(sample));
+}
+''')
+            board=owned/'Source/Engine/DspBoard'
+            subprocess.run(['clang++','-std=c++17','-O3','-Wall','-Wextra','-Werror',
+                '-I'+str(owned/'Source'),'-I'+str(SOURCE/'scripts/macos'),str(program),
+                str(board/'BoardEffects.cpp'),str(board/'BoardResources.cpp'),'-o',str(root/'loop')],check=True)
+            subprocess.run([root/'loop'],env={**os.environ,'SWARA_HOST_TRACE_DIR':str(root/'trace')},check=True)
+            result=loop_capture(root/'trace')
+            self.assertEqual(result['buffer_bytes'],1281)
+            self.assertEqual(result['replay_state_samples'],160)
 
 if __name__=='__main__':unittest.main()
