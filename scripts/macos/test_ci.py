@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 MontroneDSP
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Fail-closed controls for native sanitizer AU discovery."""
+"""Fail-closed controls for native validation and qualification."""
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from ci import Campaign
 
@@ -110,6 +111,52 @@ class PluginvalPolicyTests(unittest.TestCase):
 
             campaign.run = run
             self.assertEqual(campaign.external_validation(bundle, 'AU'), 1)
+
+
+class QualificationOrchestrationTests(unittest.TestCase):
+    def test_release_keeps_regression_evidence_but_fails_on_validator_exit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            build = Path(directory)
+            host = build / 'Tests/Apple/SwaraXTApplePluginHost_artefacts/Release/SwaraXTApplePluginHost'
+            host.parent.mkdir(parents=True)
+            host.touch()
+            bundles = [build / 'Swara XT.component', build / 'Swara XT.vst3']
+            campaign = Campaign.__new__(Campaign)
+            campaign.args = SimpleNamespace(task='tests', profile='Release')
+            campaign.root = build
+            campaign.report = {}
+            campaign.prepare = Mock(return_value=build / 'JUCE')
+            campaign.configure = Mock(return_value=(build, 'Release'))
+            campaign.bundles = Mock(return_value=bundles)
+            campaign.verified_candidate = Mock(return_value=bundles)
+            campaign.seal_ci_bundles = Mock()
+            campaign.verify_native_host = Mock()
+            campaign.register_ci_au = Mock()
+            # The full host path must reach VST3 validation and both lifecycles
+            # even when strict AU pluginval returns its observed abort exit.
+            campaign.external_validation = Mock(side_effect=[9, 0])
+            campaign.regressions = Mock()
+
+            def run(name, argv, **kwargs):
+                if name in ('actual-AU', 'actual-VST3'):
+                    (build / (name + '.log')).write_text(
+                        'PASS: actual plugin two-instance audio/editor/state/reopen lifecycle\n')
+                return 0
+
+            campaign.run = Mock(side_effect=run)
+            campaign.finish_evidence = Mock()
+            calls = Mock()
+            calls.attach_mock(campaign.regressions, 'regressions')
+            calls.attach_mock(campaign.finish_evidence, 'finish_evidence')
+            with patch('infrastructure.cleanup_au') as cleanup, patch('ci.subprocess.check_output', return_value=''):
+                with self.assertRaisesRegex(RuntimeError, 'Mandatory native validation failed'):
+                    campaign.execute()
+            cleanup.assert_called_once_with(build, campaign.run)
+            self.assertEqual([call.args[-1] for call in campaign.external_validation.call_args_list], ['AU', 'VST3'])
+            self.assertEqual(campaign.report['actual_hosts'], {'AU': 'PASS', 'VST3': 'PASS'})
+            self.assertEqual([call[0] for call in calls.mock_calls], ['regressions', 'finish_evidence'])
+            self.assertEqual(campaign.report['native_validation'], 'FAIL')
+            self.assertEqual(campaign.report['decision'], 'QUALIFICATION_FAILED')
 
 
 def load_tests(loader, tests, pattern):

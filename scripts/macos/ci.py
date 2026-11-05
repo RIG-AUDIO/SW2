@@ -305,8 +305,11 @@ class Campaign(PublicInfrastructure):
         bundles = self.verified_candidate() if self.args.profile == 'Release' else self.bundles(build, config)
         if self.args.profile != 'Release':
             self.validate_native_bundles(bundles)
-        require(self.actual_hosts(host, bundles, external=self.args.profile == 'Release'), 'Actual native plugin preflight failed')
+        validation_passed = self.actual_hosts(host, bundles, external=self.args.profile == 'Release')
+        self.report['native_validation'] = 'PASS' if validation_passed else 'FAIL'
+        self.save()
         self.regressions(build,juce,config)
+        return validation_passed
 
     def regressions(self,build,juce,config):
         """Unchanged complete build, instrumentation audit and CTest campaign."""
@@ -316,9 +319,11 @@ class Campaign(PublicInfrastructure):
         production = [entry for entry in commands if Path(entry['file']).is_relative_to(SOURCE / 'Source')]
         require(len(production) > 10, 'Qualification invariant: len(production) > 10')
         if self.args.profile in ('asan-ubsan', 'tsan'):
-            required = '-fsanitize=thread' if self.args.profile == 'tsan' else '-fsanitize=address,undefined,vptr'
+            required = set(self.sanitizer_flags)
+            require(required, 'Sanitizer profile has no configured flags')
             for entry in commands:
-                require(required in shlex.split(entry['command']), 'Uninstrumented translation unit: ' + entry['file'])
+                require(required.issubset(shlex.split(entry['command'])),
+                        'Missing required sanitizer flags: ' + entry['file'])
         self.report['compile_commands_count'] = len(commands)
         self.report['production_compile_commands_count'] = len(production)
         self.report['compile_commands_audit'] = 'PASS'
@@ -461,6 +466,7 @@ class Campaign(PublicInfrastructure):
     def execute(self):
         try:
             juce = self.prepare()
+            validation_passed = True
             if self.args.task == 'universal':
                 self.universal(juce)
             elif self.args.task == 'preflight':
@@ -470,9 +476,10 @@ class Campaign(PublicInfrastructure):
             elif self.args.task == 'smoke':
                 self.smoke(juce)
             elif self.args.task == 'tests':
-                self.tests(juce)
+                validation_passed = self.tests(juce)
             require(not subprocess.check_output(['git', 'status', '--porcelain'], cwd=SOURCE, text=True, timeout=120).strip(), "Qualification invariant: not subprocess.check_output(['git', 'status', '--porcelain'], cwd=SOURCE, text=True).strip()")
             self.finish_evidence()
+            require(validation_passed, 'Mandatory native validation failed; validator and regression evidence retained')
             self.report['decision'] = {'preflight': 'PREFLIGHT_PASS', 'universal': 'BUILD_PASS_UNQUALIFIED',
                 'smoke': 'SMOKE_PASS_NOT_FULLY_QUALIFIED', 'tests': 'NATIVE_PROFILE_PASS_NOT_FULLY_QUALIFIED'}[self.args.task]
         except BaseException as error:
