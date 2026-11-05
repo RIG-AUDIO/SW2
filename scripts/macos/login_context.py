@@ -11,7 +11,7 @@ import sys
 import time
 import uuid
 
-from policy import hosted_root, owned_path, require, run_process
+from policy import hosted_root, owned_path, require, run_process, ProcessResult
 
 
 def worker(folder):
@@ -28,7 +28,7 @@ def worker(folder):
     except Exception:
         code = 125
     partial = folder / 'result.partial'
-    partial.write_text(json.dumps({'exit_code': code}))
+    partial.write_text(json.dumps({'exit_code': code, 'process_cleanup':getattr(code,'cleanup',None)}))
     partial.replace(folder / 'result.json')
 
 
@@ -62,7 +62,8 @@ def run_login(command, logfile, root, timeout, env):
         while time.monotonic() < deadline:
             result_file = folder / 'result.json'
             if result_file.exists():
-                return json.loads(result_file.read_text())['exit_code']
+                result = json.loads(result_file.read_text())
+                return ProcessResult(result['exit_code'], result['process_cleanup']) if result.get('process_cleanup') is not None else result['exit_code']
             time.sleep(1)
         return 124
     finally:

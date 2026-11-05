@@ -9,6 +9,9 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import re
+import shutil
+import sys
 from ci import Campaign, SOURCE, digest
 from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path, APPLE_GUARD_TEST, verify_apple_guard_test
 
@@ -20,6 +23,38 @@ ARCHIVE_SHA256='4ac730262b6993d96217dd6527fe959b2bd6898f79520ffb7f514ebaf37b8968
 class DiagnosticCampaign(Campaign):
     def configure(self,juce,universal=False):
         build,config=super().configure(juce,universal)
+        if getattr(self.args, 'optimize_build', False):
+            import compiler_cache
+            before=json.loads((build/'compile_commands.json').read_text())
+            inventory_before=json.loads(subprocess.check_output(['ctest','--test-dir',build,'--show-only=json-v1'],text=True))
+            self.cache_tool=compiler_cache.install(self.root/'compiler-cache-tool')
+            self.env=compiler_cache.configure_cache(self.root/'compiler-cache',self.env,self.args.arch+'-'+self.args.profile)
+            self.run('compiler-cache-config',[self.cache_tool,'--show-config'])
+            settings=(self.root/'compiler-cache-config.log').read_text()
+            for name in ('sloppiness','ignore_options','remote_storage','base_dir'):
+                require(any(line.endswith(name+' = ') for line in settings.splitlines()),'Unsafe compiler-cache setting: '+name)
+            controls=compiler_cache.equivalence_controls(self.cache_tool,self.root/'cache-equivalence-controls',
+                subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env,apple=True)
+            (self.root/'cache-equivalence.json').write_text(json.dumps(controls,indent=2)+'\n')
+            cmake_control=compiler_cache.cmake_control(self.cache_tool,self.root/'cache-cmake-control',
+                subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env)
+            (self.root/'cache-cmake-equivalence.json').write_text(json.dumps(cmake_control,indent=2)+'\n')
+            launcher=';'.join([sys.executable,str(SOURCE/'scripts/macos/compiler_cache.py'),'--launch',
+                str(self.cache_tool),str(juce),str(build/'generated/midi-capacity/juce_audio_utils.mm')])
+            self.run('configure-compiler-cache',['cmake','-S',SOURCE,'-B',build,
+                *['-DCMAKE_'+language+'_COMPILER_LAUNCHER='+launcher for language in ('C','CXX','OBJC','OBJCXX')]])
+            after=json.loads((build/'compile_commands.json').read_text())
+            require(before==after,'Compiler launcher changed evaluated compilation semantics')
+            inventory_after=json.loads(subprocess.check_output(['ctest','--test-dir',build,'--show-only=json-v1'],text=True))
+            require(inventory_before==inventory_after,'Compiler cache changed mandatory CTest inventory')
+            (self.root/'ctest-configured-inventory.json').write_text(json.dumps(inventory_after,indent=2)+'\n')
+            (self.root/'build-graph-inventory.json').write_text(json.dumps(compiler_cache.inventory(after),indent=2)+'\n')
+            self.run('complete-ninja-graph',['ninja','-C',build,'-t','graph','SwaraXTQualificationTests'])
+            self.report['build_optimization']={'method':'JUCE_ONLY_PREPROCESSOR_CACHE','ccache_version':compiler_cache.VERSION,
+                'ccache_commit':compiler_cache.UPSTREAM_COMMIT,'ccache_archive_sha256':compiler_cache.DARWIN_SHA256,
+                'evaluated_compile_commands':'IDENTICAL','ctest_inventory':'IDENTICAL',
+                'production_object_sharing':False,'parallelism':2,'timeout_seconds':10800}
+            self.save()
         if self.args.task=='smoke':
             self.run('configure-host-stack-symbols',['cmake','-S',SOURCE,'-B',build,
                      '-DCMAKE_CXX_FLAGS=-g','-DCMAKE_OBJCXX_FLAGS=-g'])
@@ -63,7 +98,36 @@ class DiagnosticCampaign(Campaign):
     def run(self,name,argv,**kwargs):
         if name=='build-host-preflight' and self.args.profile=='Release':
             argv=[value for value in argv if value not in ('SwaraXT_AU','SwaraXT_VST3')]
-        code=super().run(name,argv,**kwargs)
+        if name=='build-native-tests' and getattr(self.args,'optimize_build',False):
+            build=self.root/'build'
+            self.run('ninja-remaining-plan',['ninja','-C',build,'-n','SwaraXTQualificationTests'])
+            plan=(self.root/'ninja-remaining-plan.log').read_text()
+            steps=[int(n) for n in re.findall(r'\[\d+/(\d+)\]',plan)]
+            self.report['build_optimization']['remaining_ninja_steps']=max(steps) if steps else 0
+            self.save()
+            argv=['/usr/bin/time','-l',*argv]
+        failure=None
+        try:
+            code=super().run(name,argv,**kwargs)
+        except BaseException as error:
+            failure=error
+            raise
+        finally:
+            if name=='build-native-tests' and getattr(self.args,'optimize_build',False):
+                try:
+                    self.run('compiler-cache-statistics',[self.cache_tool,'--show-stats','--verbose'])
+                    self.run('compiler-cache-counters',[self.cache_tool,'--print-stats'])
+                    statistics=self.root/'compiler-cache/statistics.log'
+                    if statistics.exists():
+                        shutil.copyfile(statistics,self.root/'compiler-cache-invocations.log')
+                    build_log=(self.root/'build-native-tests.log').read_text(errors='replace')
+                    rss=re.findall(r'(\d+)\s+maximum resident set size',build_log)
+                    self.report['build_optimization']['time_maximum_resident_set_size_bytes']=int(rss[-1]) if rss else None
+                    self.save()
+                except BaseException as error:
+                    self.report['cache_statistics_error']=str(error)
+                    self.save()
+                    if failure is None:raise
         if name in ('actual-AU','actual-VST3') and code!=0:
             # A second focused reproduction only, before owned AU cleanup. Stack only,
             # no core dumps, environment, credential stores or raw crash-report archives.
@@ -79,6 +143,7 @@ class DiagnosticCampaign(Campaign):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--profile',choices=['smoke-repro','Release','Debug','asan-ubsan','tsan'],default='smoke-repro')
+    p.add_argument('--optimize-build',action='store_true',help='Validate and measure the JUCE-only preprocessor cache')
     p.add_argument('--root',type=Path,required=True);p.add_argument('--candidate-download',type=Path,required=True)
     a=p.parse_args();hosted_root(a.root,SOURCE)
     a.candidate_download=owned_path(a.candidate_download,os.environ['RUNNER_TEMP'])

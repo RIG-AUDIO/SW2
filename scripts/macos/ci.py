@@ -75,8 +75,13 @@ class Campaign(PublicInfrastructure):
                     code = 124
         self.report['commands'].append({'name': name, 'argv': argv, 'exit_code': code,
                                        'seconds': round(time.monotonic() - start, 2)})
+        cleanup = getattr(code, 'cleanup', None)
+        if cleanup is not None:
+            self.report['commands'][-1]['process_cleanup'] = cleanup
         self.save()
         print('END', name, code, flush=True)
+        require(cleanup is None or cleanup['success'],
+                name + ' process cleanup failed; original exit code ' + str(code) + ' retained')
         if expected is not None and code != expected:
             print((self.root / (name + '.log')).read_text(errors='replace')[-12000:], flush=True)
             raise RuntimeError(name + ' failed; original log retained')
@@ -496,7 +501,8 @@ def main():
         if root.exists():
             def cleanup_run(name, argv):
                 with (root / (name + '-fallback.log')).open('x') as log:
-                    require(run_process(argv, cwd=root, env=os.environ.copy(), stdout=log, timeout=120) == 0,
+                    result = run_process(argv, cwd=root, env=os.environ.copy(), stdout=log, timeout=120)
+                    require(result == 0 and result.cleanup['success'],
                             'Fallback AU cleanup failed')
             cleanup_au(root, cleanup_run)
         return

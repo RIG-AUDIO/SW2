@@ -7,10 +7,11 @@ import os
 from pathlib import Path
 from pathlib import PurePosixPath
 import re
-import signal
 import subprocess
 import tarfile
 import zipfile
+
+from processes import run_process, ProcessResult
 
 REPOSITORY = 'RIG-AUDIO/SW2'
 JUCE_SHA = 'e18f7f506c0b96f2c738a0bcd7fe6467a5005ad8'
@@ -64,30 +65,6 @@ def hosted_root(root, source=None):
         require(not root.is_relative_to(source) and not source.is_relative_to(root), 'Source and generated files must be separate')
     return root
 
-
-def run_process(argv, *, cwd, env, stdout, timeout):
-    """Bound process groups, including descendants, on timeout and cancellation."""
-    process = subprocess.Popen(list(map(str, argv)), cwd=cwd, env=env, stdout=stdout,
-                               stderr=subprocess.STDOUT, start_new_session=True)
-    try:
-        return process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return 124
-    finally:
-        # Validators may leave a child even after their parent exits.
-        try:
-            os.killpg(process.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-        try:
-            process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            pass
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        process.wait(timeout=5)
 
 
 def files_manifest(root):

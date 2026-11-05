@@ -10,6 +10,10 @@ on:
         description: Run smoke-repro first; do not schedule profiles until its failure is resolved
         default: smoke-repro
         options: [smoke-repro, Release, Debug, asan-ubsan, tsan]
+      optimize-build:
+        type: boolean
+        description: Measure cold build-local JUCE cache; prove Release before other profiles
+        default: false
   push:
     branches: [ci/macos-130-qualification]
     paths: [.github/workflows/macos-intel-native-diagnostics.yml]
@@ -47,9 +51,12 @@ jobs:
         env:
           RUNNER_ENVIRONMENT: ${{ runner.environment }}
           DIAGNOSTIC_PROFILE: ${{ inputs.profile || 'smoke-repro' }}
-        run: >-
-          python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE"
-          --root "$RUNNER_TEMP/intel-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
+          OPTIMIZE_BUILD: ${{ inputs.optimize-build || false }}
+        run: |
+          options=()
+          if [[ "$OPTIMIZE_BUILD" == true ]]; then options+=(--optimize-build); fi
+          python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE" "${options[@]}" \
+            --root "$RUNNER_TEMP/intel-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
       - name: Verify owned AU cleanup after failure
         if: always()
         env:
