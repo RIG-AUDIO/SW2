@@ -7,9 +7,9 @@ on:
     inputs:
       profile:
         type: choice
-        description: Run smoke-repro first; do not schedule profiles until its failure is resolved
+        description: Isolated Release parity capture, focused smoke, or native profile diagnostics
         default: smoke-repro
-        options: [smoke-repro, Release-build-probe, Release, Debug, asan-ubsan, tsan]
+        options: [smoke-repro, Release-build-probe, Release-parity-capture, Release, Debug, asan-ubsan, tsan]
       optimize-build:
         type: boolean
         description: Measure cold build-local JUCE cache; prove Release before other profiles
@@ -47,7 +47,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: python3 -m pip install cmake==3.31.6 ninja==1.11.1.4
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+      - if: inputs.profile != 'Release-parity-capture'
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           github-token: ${{ github.token }}
           run-id: 41924729723
@@ -60,6 +61,10 @@ jobs:
           OPTIMIZE_BUILD: ${{ inputs.optimize-build || false }}
           DIAGNOSTIC_ARCH: ${{ inputs.architecture || 'x86_64' }}
         run: |
+          if [[ "$DIAGNOSTIC_PROFILE" == Release-parity-capture ]]; then
+            python3 scripts/macos/parity_probe.py --arch "$DIAGNOSTIC_ARCH" --root "$RUNNER_TEMP/native-diagnostic"
+            exit $?
+          fi
           options=()
           if [[ "$OPTIMIZE_BUILD" == true ]]; then options+=(--optimize-build); fi
           python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE" --arch "$DIAGNOSTIC_ARCH" "${options[@]}" \
@@ -82,6 +87,9 @@ jobs:
             ${{ runner.temp }}/native-diagnostic/*.log
             ${{ runner.temp }}/native-diagnostic/*.xml
             ${{ runner.temp }}/native-diagnostic/*.png
+            ${{ runner.temp }}/native-diagnostic/captures/**/*.f32
+            ${{ runner.temp }}/native-diagnostic/captures/**/*.json
+            ${{ runner.temp }}/native-diagnostic/capture-drivers/manifest.json
             ${{ runner.temp }}/native-diagnostic/owned-login-*/*.log
             ${{ runner.temp }}/native-diagnostic/owned-login-*/cleanup.json
           if-no-files-found: error

@@ -1,0 +1,1693 @@
+{
+  "schema": 1,
+  "qualification": "BLOCKED",
+  "reference_admission": "REVIEW_REQUIRED",
+  "runs": {
+    "x86_64": {
+      "source_sha": "8c1a26e3f313711919b02078dc48d6d7f89fc4af",
+      "juce_sha": "e18f7f506c0b96f2c738a0bcd7fe6467a5005ad8",
+      "compiler_version": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "xcode_version": "Xcode 16.4\nBuild version 16F6",
+      "sdk_version": "15.5",
+      "runner_image": {
+        "ImageOS": "macos15",
+        "ImageVersion": "20260824.0482.1",
+        "RUNNER_ARCH": "X64"
+      },
+      "macos_version": "15.7.9",
+      "profile": "Release",
+      "source_parity": {
+        "base_source_sha": "5e7b967db0b52f773f382217a72c6c0c3ff6b8f7",
+        "checkout_sha": "8c1a26e3f313711919b02078dc48d6d7f89fc4af",
+        "production_parity": "EXACT_PARSER_PORTABILITY_EXCEPTION",
+        "actual_parser_source_sha256": "3de88d494b844a865ca6546afc34f9c3482f42ec6ae827a36cef8fbd0141c3a0",
+        "actual_cutoff_source_sha256": "a3913009eb5fb98a81b036b6da4940d304a81c4298749332b0f827d62ab5be8b",
+        "parser_dependency_hashes": {
+          "Source/Tuning/RealFromChars.h": "fb47ca3421c701681d53025fe11e883ae9e4fcf376d904a7c34d2a9a772b7d96",
+          "third_party/fast_float/UPSTREAM.json": "43d3685de2707cb0830ca59b561dd33d214e0eefe31112b94bb7558a67bfc391",
+          "REUSE.toml": "53860a3e09d87db5dc318ef5e2ca51a93c035248aa4f595caf4fbef9674f5c14",
+          "LICENSES/MIT.txt": "e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6"
+        },
+        "version": "1.3.0",
+        "product_trees": {
+          "Source": {
+            "base": "b24564fd2e1ee8aa9285c2c76cb5d00a7cf13556",
+            "checkout": "5a9795fbb592549a7160c00973db13acc11b8873"
+          },
+          "resources": {
+            "base": "b91803e6f546e14359ffc3c63f4fe0012c07b4e9",
+            "checkout": "b91803e6f546e14359ffc3c63f4fe0012c07b4e9"
+          },
+          "third_party": {
+            "base": "3353c43fa5103749da14fb405deb1e7b161f8c30",
+            "checkout": "1066dc9bb753cd543e44e9f69a4a06b9b4c174bf"
+          },
+          "Tests": {
+            "base": "e33b6deb8f412aa48b0669642b6a30f8030fab95",
+            "checkout": "17e95e196a762bc2f8c0e125677706f3c585d746"
+          }
+        },
+        "integration_paths": [
+          ".github/workflows/macos-development-build.yml",
+          ".github/workflows/macos-intel-native-diagnostics.yml",
+          ".github/workflows/macos-qualification.yml",
+          "CMakeLists.txt",
+          "LICENSES/MIT.txt",
+          "REUSE.toml",
+          "Source/Plugin/SwaraXtParameterLayout.cpp",
+          "Source/Tuning/RealFromChars.h",
+          "Source/Tuning/TuningTable.cpp",
+          "Tests/Apple/CMakeLists.txt",
+          "Tests/Apple/ChannelTypeContract.cpp",
+          "Tests/Apple/PluginHost.cpp",
+          "Tests/Apple/Validator.cmake",
+          "Tests/CMakeLists.txt",
+          "Tests/avrlib_hd/UpperRegisterOscillatorTestsMain.cpp",
+          "cmake/StandaloneMidiCapacity.cmake",
+          "docs/macos/CUTOFF-PORTABILITY.md",
+          "docs/macos/DEVELOPMENT-BUILD.md",
+          "docs/macos/QUALIFICATION.md",
+          "docs/macos/cutoff-validation.json",
+          "docs/macos/intel-native-diagnostics.md",
+          "docs/macos/native-build-optimization.md",
+          "docs/macos/parser-validation.json",
+          "scripts/macos/ParserEquivalence.cpp",
+          "scripts/macos/TuningParserCorpus.cpp",
+          "scripts/macos/audit_from_chars.py",
+          "scripts/macos/ci.py",
+          "scripts/macos/compiler_cache.py",
+          "scripts/macos/cutoff/CMakeLists.txt",
+          "scripts/macos/cutoff/CutoffParameterTests.cpp",
+          "scripts/macos/cutoff/qualify.py",
+          "scripts/macos/dependency_overlay.py",
+          "scripts/macos/gate.py",
+          "scripts/macos/infrastructure.py",
+          "scripts/macos/intel_diagnostics.py",
+          "scripts/macos/login_context.py",
+          "scripts/macos/native_reference.py",
+          "scripts/macos/parser_semantics.py",
+          "scripts/macos/policy.py",
+          "scripts/macos/processes.py",
+          "scripts/macos/test_ci.py",
+          "scripts/macos/test_compiler_cache.py",
+          "scripts/macos/test_intel_diagnostics.py",
+          "scripts/macos/test_native_reference.py",
+          "scripts/macos/test_policy.py",
+          "scripts/macos/test_processes.py",
+          "scripts/macos/test_scheduling.py",
+          "third_party/fast_float/AUTHORS",
+          "third_party/fast_float/CONTRIBUTORS",
+          "third_party/fast_float/LICENSE-APACHE",
+          "third_party/fast_float/LICENSE-BOOST",
+          "third_party/fast_float/LICENSE-MIT",
+          "third_party/fast_float/UPSTREAM.json",
+          "third_party/fast_float/include/fast_float/ascii_number.h",
+          "third_party/fast_float/include/fast_float/bigint.h",
+          "third_party/fast_float/include/fast_float/constexpr_feature_detect.h",
+          "third_party/fast_float/include/fast_float/decimal_to_binary.h",
+          "third_party/fast_float/include/fast_float/digit_comparison.h",
+          "third_party/fast_float/include/fast_float/fast_float.h",
+          "third_party/fast_float/include/fast_float/fast_table.h",
+          "third_party/fast_float/include/fast_float/float_common.h",
+          "third_party/fast_float/include/fast_float/parse_number.h"
+        ]
+      },
+      "run_url": "https://github.com/RIG-AUDIO/SW2/actions/runs/41987415872",
+      "ctest_sha256": "9c4f594c19bd3c32add95d459d4097c3d3243392d032c5c20d361d845b6c0061",
+      "report_sha256": "1a0b5d44c1e21b0d0d590e1afac4947ca6868da56d81d06b563017843c7e5336",
+      "compile_commands_sha256": "bd2a178c17ba40d446294dd5f197b2f57f00253ce6f326ee3bb755a61f128389",
+      "production_flags_sample": [
+        "-DJUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+        "-DJUCE_IN_APP_PURCHASES=0",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_core=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_data_structures=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_dsp=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_events=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_graphics=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+        "-DJUCE_SHARED_CODE=1",
+        "-DJUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+        "-DJUCE_TARGET_HAS_BINARY_DATA=1",
+        "-DJUCE_USE_CURL=0",
+        "-DJUCE_VST3_CAN_REPLACE_VST2=0",
+        "-DJUCE_WEBVIEW_INTEROP_LIBRARY_VERSION=\"1.0.0\"",
+        "-DJUCE_WEB_BROWSER=0",
+        "-DJucePlugin_AAXCategory=2048",
+        "-DJucePlugin_AAXDisableBypass=0",
+        "-DJucePlugin_AAXDisableMultiMono=0",
+        "-DJucePlugin_AAXIdentifier=com.MontroneDSP.SwaraXT",
+        "-DJucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+        "-DJucePlugin_AAXProductId=JucePlugin_PluginCode",
+        "-DJucePlugin_ARACompatibleArchiveIDs=\"\"",
+        "-DJucePlugin_ARAContentTypes=0",
+        "-DJucePlugin_ARADocumentArchiveID=\"com.MontroneDSP.SwaraXT.aradocumentarchive.1\"",
+        "-DJucePlugin_ARAFactoryID=\"com.MontroneDSP.SwaraXT.arafactory.1.3.0\"",
+        "-DJucePlugin_ARATransformationFlags=0",
+        "-DJucePlugin_AUExportPrefix=Swara_XTAU",
+        "-DJucePlugin_AUExportPrefixQuoted=\"Swara_XTAU\"",
+        "-DJucePlugin_AUMainType='aumu'",
+        "-DJucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+        "-DJucePlugin_AUSubType=JucePlugin_PluginCode",
+        "-DJucePlugin_Build_AAX=0",
+        "-DJucePlugin_Build_AU=1",
+        "-DJucePlugin_Build_AUv3=0",
+        "-DJucePlugin_Build_LV2=0",
+        "-DJucePlugin_Build_Standalone=0",
+        "-DJucePlugin_Build_Unity=0",
+        "-DJucePlugin_Build_VST3=1",
+        "-DJucePlugin_Build_VST=0",
+        "-DJucePlugin_CFBundleIdentifier=com.MontroneDSP.SwaraXT",
+        "-DJucePlugin_Desc=\"Swara XT\"",
+        "-DJucePlugin_EditorRequiresKeyboardFocus=0",
+        "-DJucePlugin_Enable_ARA=0",
+        "-DJucePlugin_IsMidiEffect=0",
+        "-DJucePlugin_IsSynth=1",
+        "-DJucePlugin_LV2PluginClass=InstrumentPlugin",
+        "-DJucePlugin_Manufacturer=\"MontroneDSP\"",
+        "-DJucePlugin_ManufacturerCode=0x4d6e5472",
+        "-DJucePlugin_ManufacturerEmail=\"\"",
+        "-DJucePlugin_ManufacturerWebsite=\"\"",
+        "-DJucePlugin_Name=\"Swara XT\"",
+        "-DJucePlugin_PluginCode=0x53775854",
+        "-DJucePlugin_ProducesMidiOutput=1",
+        "-DJucePlugin_VSTCategory=kPlugCategSynth",
+        "-DJucePlugin_VSTNumMidiInputs=16",
+        "-DJucePlugin_VSTNumMidiOutputs=16",
+        "-DJucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+        "-DJucePlugin_Version=1.3.0",
+        "-DJucePlugin_VersionCode=0x10300",
+        "-DJucePlugin_VersionString=\"1.3.0\"",
+        "-DJucePlugin_Vst3Category=\"Instrument|Synth\"",
+        "-DJucePlugin_WantsMidiInput=1",
+        "-DNDEBUG=1",
+        "-DSWARAXT_USE_AVRLIB_HD_VOICE=1",
+        "-DSWARAXT_VERSION_STRING=\"1.3.0\"",
+        "-D_NDEBUG=1",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c++17",
+        "-mmacosx-version-min=11.0",
+        "-O3"
+      ],
+      "passed": 134,
+      "failed": [
+        "SwaraXTDualSvfSection2Tests",
+        "SwaraXTDualSvfIntegrationAudit"
+      ],
+      "failed_assertions": {
+        "SwaraXTDualSvfSection2Tests": {
+          "separate Relative audio references unchanged": 2,
+          "separate Independent audio references unchanged": 2
+        },
+        "SwaraXTDualSvfIntegrationAudit": {
+          "pre-delay synthesis matches the published baseline fingerprint": 48,
+          "migrated Section 2 host reference matches exact timing contract": 12
+        }
+      }
+    },
+    "arm64": {
+      "source_sha": "3206c24bc93373b112e2462bc3ad0b07fe7f7589",
+      "juce_sha": "e18f7f506c0b96f2c738a0bcd7fe6467a5005ad8",
+      "compiler_version": "Apple clang version 17.0.0 (clang-1700.0.13.5)\nTarget: arm64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+      "xcode_version": "Xcode 16.4\nBuild version 16F6",
+      "sdk_version": "15.5",
+      "runner_image": {
+        "ImageOS": "macos15",
+        "ImageVersion": "20261028.0489.1",
+        "RUNNER_ARCH": "ARM64"
+      },
+      "macos_version": "15.8.2",
+      "profile": "Release",
+      "source_parity": {
+        "base_source_sha": "5e7b967db0b52f773f382217a72c6c0c3ff6b8f7",
+        "checkout_sha": "3206c24bc93373b112e2462bc3ad0b07fe7f7589",
+        "production_parity": "EXACT_PARSER_PORTABILITY_EXCEPTION",
+        "actual_parser_source_sha256": "3de88d494b844a865ca6546afc34f9c3482f42ec6ae827a36cef8fbd0141c3a0",
+        "actual_cutoff_source_sha256": "a3913009eb5fb98a81b036b6da4940d304a81c4298749332b0f827d62ab5be8b",
+        "parser_dependency_hashes": {
+          "Source/Tuning/RealFromChars.h": "fb47ca3421c701681d53025fe11e883ae9e4fcf376d904a7c34d2a9a772b7d96",
+          "third_party/fast_float/UPSTREAM.json": "43d3685de2707cb0830ca59b561dd33d214e0eefe31112b94bb7558a67bfc391",
+          "REUSE.toml": "53860a3e09d87db5dc318ef5e2ca51a93c035248aa4f595caf4fbef9674f5c14",
+          "LICENSES/MIT.txt": "e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6"
+        },
+        "version": "1.3.0",
+        "product_trees": {
+          "Source": {
+            "base": "b24564fd2e1ee8aa9285c2c76cb5d00a7cf13556",
+            "checkout": "5a9795fbb592549a7160c00973db13acc11b8873"
+          },
+          "resources": {
+            "base": "b91803e6f546e14359ffc3c63f4fe0012c07b4e9",
+            "checkout": "b91803e6f546e14359ffc3c63f4fe0012c07b4e9"
+          },
+          "third_party": {
+            "base": "3353c43fa5103749da14fb405deb1e7b161f8c30",
+            "checkout": "1066dc9bb753cd543e44e9f69a4a06b9b4c174bf"
+          },
+          "Tests": {
+            "base": "e33b6deb8f412aa48b0669642b6a30f8030fab95",
+            "checkout": "17e95e196a762bc2f8c0e125677706f3c585d746"
+          }
+        },
+        "integration_paths": [
+          ".github/workflows/macos-development-build.yml",
+          ".github/workflows/macos-intel-native-diagnostics.yml",
+          ".github/workflows/macos-qualification.yml",
+          "CMakeLists.txt",
+          "LICENSES/MIT.txt",
+          "REUSE.toml",
+          "Source/Plugin/SwaraXtParameterLayout.cpp",
+          "Source/Tuning/RealFromChars.h",
+          "Source/Tuning/TuningTable.cpp",
+          "Tests/Apple/CMakeLists.txt",
+          "Tests/Apple/ChannelTypeContract.cpp",
+          "Tests/Apple/PluginHost.cpp",
+          "Tests/Apple/Validator.cmake",
+          "Tests/CMakeLists.txt",
+          "Tests/avrlib_hd/UpperRegisterOscillatorTestsMain.cpp",
+          "cmake/StandaloneMidiCapacity.cmake",
+          "docs/macos/CUTOFF-PORTABILITY.md",
+          "docs/macos/DEVELOPMENT-BUILD.md",
+          "docs/macos/QUALIFICATION.md",
+          "docs/macos/cutoff-validation.json",
+          "docs/macos/intel-native-diagnostics.md",
+          "docs/macos/native-build-optimization.md",
+          "docs/macos/parser-validation.json",
+          "scripts/macos/ParserEquivalence.cpp",
+          "scripts/macos/TuningParserCorpus.cpp",
+          "scripts/macos/audit_from_chars.py",
+          "scripts/macos/ci.py",
+          "scripts/macos/compiler_cache.py",
+          "scripts/macos/cutoff/CMakeLists.txt",
+          "scripts/macos/cutoff/CutoffParameterTests.cpp",
+          "scripts/macos/cutoff/qualify.py",
+          "scripts/macos/dependency_overlay.py",
+          "scripts/macos/gate.py",
+          "scripts/macos/infrastructure.py",
+          "scripts/macos/intel_diagnostics.py",
+          "scripts/macos/login_context.py",
+          "scripts/macos/native_reference.py",
+          "scripts/macos/parser_semantics.py",
+          "scripts/macos/policy.py",
+          "scripts/macos/processes.py",
+          "scripts/macos/test_ci.py",
+          "scripts/macos/test_compiler_cache.py",
+          "scripts/macos/test_intel_diagnostics.py",
+          "scripts/macos/test_native_reference.py",
+          "scripts/macos/test_policy.py",
+          "scripts/macos/test_processes.py",
+          "scripts/macos/test_scheduling.py",
+          "third_party/fast_float/AUTHORS",
+          "third_party/fast_float/CONTRIBUTORS",
+          "third_party/fast_float/LICENSE-APACHE",
+          "third_party/fast_float/LICENSE-BOOST",
+          "third_party/fast_float/LICENSE-MIT",
+          "third_party/fast_float/UPSTREAM.json",
+          "third_party/fast_float/include/fast_float/ascii_number.h",
+          "third_party/fast_float/include/fast_float/bigint.h",
+          "third_party/fast_float/include/fast_float/constexpr_feature_detect.h",
+          "third_party/fast_float/include/fast_float/decimal_to_binary.h",
+          "third_party/fast_float/include/fast_float/digit_comparison.h",
+          "third_party/fast_float/include/fast_float/fast_float.h",
+          "third_party/fast_float/include/fast_float/fast_table.h",
+          "third_party/fast_float/include/fast_float/float_common.h",
+          "third_party/fast_float/include/fast_float/parse_number.h"
+        ]
+      },
+      "run_url": "https://github.com/RIG-AUDIO/SW2/actions/runs/41997015252",
+      "ctest_sha256": "46a540c28cc804dec0881d5d736c0050824e0f2ca4582dd5061d396bfff3080f",
+      "report_sha256": "e2ccef6b0551535d14ea00aba7918a09e90ab6c09755053f0679af6eca5a2069",
+      "compile_commands_sha256": "1d479a2ee8f160683b3adc793f680a1519e79428ae41a5fc652fcbfade4465e0",
+      "production_flags_sample": [
+        "-DJUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+        "-DJUCE_IN_APP_PURCHASES=0",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_processors_headless=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_core=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_data_structures=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_dsp=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_events=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_graphics=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+        "-DJUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+        "-DJUCE_SHARED_CODE=1",
+        "-DJUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+        "-DJUCE_TARGET_HAS_BINARY_DATA=1",
+        "-DJUCE_USE_CURL=0",
+        "-DJUCE_VST3_CAN_REPLACE_VST2=0",
+        "-DJUCE_WEBVIEW_INTEROP_LIBRARY_VERSION=\"1.0.0\"",
+        "-DJUCE_WEB_BROWSER=0",
+        "-DJucePlugin_AAXCategory=2048",
+        "-DJucePlugin_AAXDisableBypass=0",
+        "-DJucePlugin_AAXDisableMultiMono=0",
+        "-DJucePlugin_AAXIdentifier=com.MontroneDSP.SwaraXT",
+        "-DJucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+        "-DJucePlugin_AAXProductId=JucePlugin_PluginCode",
+        "-DJucePlugin_ARACompatibleArchiveIDs=\"\"",
+        "-DJucePlugin_ARAContentTypes=0",
+        "-DJucePlugin_ARADocumentArchiveID=\"com.MontroneDSP.SwaraXT.aradocumentarchive.1\"",
+        "-DJucePlugin_ARAFactoryID=\"com.MontroneDSP.SwaraXT.arafactory.1.3.0\"",
+        "-DJucePlugin_ARATransformationFlags=0",
+        "-DJucePlugin_AUExportPrefix=Swara_XTAU",
+        "-DJucePlugin_AUExportPrefixQuoted=\"Swara_XTAU\"",
+        "-DJucePlugin_AUMainType='aumu'",
+        "-DJucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+        "-DJucePlugin_AUSubType=JucePlugin_PluginCode",
+        "-DJucePlugin_Build_AAX=0",
+        "-DJucePlugin_Build_AU=1",
+        "-DJucePlugin_Build_AUv3=0",
+        "-DJucePlugin_Build_LV2=0",
+        "-DJucePlugin_Build_Standalone=0",
+        "-DJucePlugin_Build_Unity=0",
+        "-DJucePlugin_Build_VST3=1",
+        "-DJucePlugin_Build_VST=0",
+        "-DJucePlugin_CFBundleIdentifier=com.MontroneDSP.SwaraXT",
+        "-DJucePlugin_Desc=\"Swara XT\"",
+        "-DJucePlugin_EditorRequiresKeyboardFocus=0",
+        "-DJucePlugin_Enable_ARA=0",
+        "-DJucePlugin_IsMidiEffect=0",
+        "-DJucePlugin_IsSynth=1",
+        "-DJucePlugin_LV2PluginClass=InstrumentPlugin",
+        "-DJucePlugin_Manufacturer=\"MontroneDSP\"",
+        "-DJucePlugin_ManufacturerCode=0x4d6e5472",
+        "-DJucePlugin_ManufacturerEmail=\"\"",
+        "-DJucePlugin_ManufacturerWebsite=\"\"",
+        "-DJucePlugin_Name=\"Swara XT\"",
+        "-DJucePlugin_PluginCode=0x53775854",
+        "-DJucePlugin_ProducesMidiOutput=1",
+        "-DJucePlugin_VSTCategory=kPlugCategSynth",
+        "-DJucePlugin_VSTNumMidiInputs=16",
+        "-DJucePlugin_VSTNumMidiOutputs=16",
+        "-DJucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+        "-DJucePlugin_Version=1.3.0",
+        "-DJucePlugin_VersionCode=0x10300",
+        "-DJucePlugin_VersionString=\"1.3.0\"",
+        "-DJucePlugin_Vst3Category=\"Instrument|Synth\"",
+        "-DJucePlugin_WantsMidiInput=1",
+        "-DNDEBUG=1",
+        "-DSWARAXT_USE_AVRLIB_HD_VOICE=1",
+        "-DSWARAXT_VERSION_STRING=\"1.3.0\"",
+        "-D_NDEBUG=1",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c++17",
+        "-mmacosx-version-min=11.0",
+        "-O3"
+      ],
+      "passed": 131,
+      "failed": [
+        "SwaraXTAudioParityTests",
+        "SwaraXTDualSvfSection2Tests",
+        "SwaraXTDualSvfIntegrationAudit",
+        "SwaraXTHostSrcExactParityTests",
+        "SwaraXTDspFxIntegratedExactParityTests"
+      ],
+      "failed_assertions": {
+        "SwaraXTAudioParityTests": {
+          "Test A basic saw": 1,
+          "Test B basic square": 1,
+          "Test C two oscillators": 1,
+          "Test F filter low resonance": 1,
+          "Test G filter high resonance": 1,
+          "Test I normal envelope": 1,
+          "Test D noise only": 1
+        },
+        "SwaraXTDualSvfSection2Tests": {
+          "separate Relative audio references unchanged": 2,
+          "separate Independent audio references unchanged": 2
+        },
+        "SwaraXTDualSvfIntegrationAudit": {
+          "pre-delay synthesis matches the published baseline fingerprint": 48,
+          "migrated Section 2 host reference matches exact timing contract": 12
+        },
+        "SwaraXTHostSrcExactParityTests": {
+          "44100_impulse": 1,
+          "44100_sine1k": 1,
+          "44100_noise": 1,
+          "44100_transient": 1,
+          "48000_impulse": 1,
+          "48000_sine1k": 1,
+          "48000_noise": 1,
+          "48000_transient": 1,
+          "88200_impulse": 1,
+          "88200_sine1k": 1,
+          "88200_noise": 1,
+          "88200_transient": 1,
+          "96000_impulse": 1,
+          "96000_sine1k": 1,
+          "96000_noise": 1,
+          "96000_transient": 1,
+          "176400_impulse": 1,
+          "176400_sine1k": 1,
+          "176400_noise": 1,
+          "176400_transient": 1,
+          "192000_impulse": 1,
+          "192000_sine1k": 1,
+          "192000_noise": 1,
+          "192000_transient": 1
+        },
+        "SwaraXTDspFxIntegratedExactParityTests": {
+          "off_default": 1,
+          "distortion_default": 1,
+          "crush_default": 1,
+          "combPositive_default": 1,
+          "combNegative_default": 1,
+          "ringMod_default": 1,
+          "delay_default": 1,
+          "delayFeedback_default": 1,
+          "delayDub_default": 1,
+          "crushDelayFeedback_default": 1,
+          "crushDelayDub_default": 1,
+          "delay16_default": 1,
+          "delay12_default": 1,
+          "delay8_default": 1,
+          "delay3_16_default": 1,
+          "looper_default": 1,
+          "pitch_default": 1,
+          "distortion_cv1min": 1,
+          "distortion_cv1max": 1,
+          "delayFeedback_cv2max": 1,
+          "looper_replay": 1
+        }
+      }
+    }
+  },
+  "case_comparison": [
+    {
+      "family": "classic",
+      "case": "Test A basic saw",
+      "expected_hash": "e49a2f5d8a7090f9",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "e49a2f5d8a7090f9",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "f9725e4f5d9bb16f",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test B basic square",
+      "expected_hash": "608f87853120af8e",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "608f87853120af8e",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "9c73de87bfbf918c",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test C two oscillators",
+      "expected_hash": "2e5f9d73aeaa1820",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "2e5f9d73aeaa1820",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "891cf7e6718ed085",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test F filter low resonance",
+      "expected_hash": "0099139bef0f1690",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "0099139bef0f1690",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "3ae4cc8a316fa919",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test G filter high resonance",
+      "expected_hash": "1ac4a6fabf9a3da5",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "1ac4a6fabf9a3da5",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "1038dce5870f43fc",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test I normal envelope",
+      "expected_hash": "8bed59407b8e5da6",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "8bed59407b8e5da6",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "d86c4cef594559fb",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test D noise only",
+      "expected_hash": "c473d3385b5767ba",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "c473d3385b5767ba",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "6fadc27660522c49",
+        "samples": 44100,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "classic",
+      "case": "Test J silence",
+      "expected_hash": "81296f5b21ed7843",
+      "expected_samples": 44100,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "81296f5b21ed7843",
+        "samples": 44100,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "81296f5b21ed7843",
+        "samples": 44100,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "44100_silence",
+      "expected_hash": "9c30604f57c67643",
+      "expected_samples": 1764,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "9c30604f57c67643",
+        "samples": 1764,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "9c30604f57c67643",
+        "samples": 1764,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "44100_impulse",
+      "expected_hash": "77cb365a04153cd6",
+      "expected_samples": 1764,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "77cb365a04153cd6",
+        "samples": 1764,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "2a701f23222f5ab6",
+        "samples": 1764,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "44100_sine1k",
+      "expected_hash": "384838fbe0ae7880",
+      "expected_samples": 1764,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "384838fbe0ae7880",
+        "samples": 1764,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "fe8480b0cf79c37e",
+        "samples": 1764,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "44100_noise",
+      "expected_hash": "7bdfc09e387f584e",
+      "expected_samples": 1764,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "7bdfc09e387f584e",
+        "samples": 1764,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "f0bfb679908b6f00",
+        "samples": 1764,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "44100_transient",
+      "expected_hash": "aef5bc5dc8424320",
+      "expected_samples": 1764,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "aef5bc5dc8424320",
+        "samples": 1764,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "13da2198939f382b",
+        "samples": 1764,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "48000_silence",
+      "expected_hash": "571f74d802dc6b83",
+      "expected_samples": 1920,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "571f74d802dc6b83",
+        "samples": 1920,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "571f74d802dc6b83",
+        "samples": 1920,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "48000_impulse",
+      "expected_hash": "7e808dc5206ec172",
+      "expected_samples": 1920,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "7e808dc5206ec172",
+        "samples": 1920,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "4fc2eb02cafdfe23",
+        "samples": 1920,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "48000_sine1k",
+      "expected_hash": "91a94602740d03c7",
+      "expected_samples": 1920,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "91a94602740d03c7",
+        "samples": 1920,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "6b006d5e9d35b593",
+        "samples": 1920,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "48000_noise",
+      "expected_hash": "173cb1d55f3a6eb6",
+      "expected_samples": 1920,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "173cb1d55f3a6eb6",
+        "samples": 1920,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "5b305d494916143c",
+        "samples": 1920,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "48000_transient",
+      "expected_hash": "fa3eca2322710cdd",
+      "expected_samples": 1920,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "fa3eca2322710cdd",
+        "samples": 1920,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "d3fa7c73222f9dd3",
+        "samples": 1920,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "88200_silence",
+      "expected_hash": "4604fb4ba8dd1903",
+      "expected_samples": 3528,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "4604fb4ba8dd1903",
+        "samples": 3528,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "4604fb4ba8dd1903",
+        "samples": 3528,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "88200_impulse",
+      "expected_hash": "9cd8ed5cddc2eecb",
+      "expected_samples": 3528,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "9cd8ed5cddc2eecb",
+        "samples": 3528,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "ddc3c4d2a6ea86ac",
+        "samples": 3528,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "88200_sine1k",
+      "expected_hash": "33704ba92964b99a",
+      "expected_samples": 3528,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "33704ba92964b99a",
+        "samples": 3528,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "133203557ecab650",
+        "samples": 3528,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "88200_noise",
+      "expected_hash": "0be6614ccb40bb0b",
+      "expected_samples": 3528,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "0be6614ccb40bb0b",
+        "samples": 3528,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "da06e8d23b77df02",
+        "samples": 3528,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "88200_transient",
+      "expected_hash": "ca2ae2a966128a31",
+      "expected_samples": 3528,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "ca2ae2a966128a31",
+        "samples": 3528,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "3c66426bc1951040",
+        "samples": 3528,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "96000_silence",
+      "expected_hash": "4f9197d17adbd383",
+      "expected_samples": 3840,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "4f9197d17adbd383",
+        "samples": 3840,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "4f9197d17adbd383",
+        "samples": 3840,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "96000_impulse",
+      "expected_hash": "1ef2f1d127eee2b7",
+      "expected_samples": 3840,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "1ef2f1d127eee2b7",
+        "samples": 3840,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "ce71183eb28ccb96",
+        "samples": 3840,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "96000_sine1k",
+      "expected_hash": "cee808929d7a015c",
+      "expected_samples": 3840,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "cee808929d7a015c",
+        "samples": 3840,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "0f96fa07ebad380f",
+        "samples": 3840,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "96000_noise",
+      "expected_hash": "8cec30fdf443ef70",
+      "expected_samples": 3840,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "8cec30fdf443ef70",
+        "samples": 3840,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84e8578e8e4e1176",
+        "samples": 3840,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "96000_transient",
+      "expected_hash": "0782d3ea6c5e70e7",
+      "expected_samples": 3840,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "0782d3ea6c5e70e7",
+        "samples": 3840,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "a08da0479701bdcf",
+        "samples": 3840,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "176400_silence",
+      "expected_hash": "4ecef083be81ee83",
+      "expected_samples": 7056,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "4ecef083be81ee83",
+        "samples": 7056,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "4ecef083be81ee83",
+        "samples": 7056,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "176400_impulse",
+      "expected_hash": "0ecd7a7279a32a35",
+      "expected_samples": 7056,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "0ecd7a7279a32a35",
+        "samples": 7056,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "f4ccb55a076bcf79",
+        "samples": 7056,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "176400_sine1k",
+      "expected_hash": "2694a697b0cf8229",
+      "expected_samples": 7056,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "2694a697b0cf8229",
+        "samples": 7056,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "dfaab4202d3c5055",
+        "samples": 7056,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "176400_noise",
+      "expected_hash": "214e98de2e28ef91",
+      "expected_samples": 7056,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "214e98de2e28ef91",
+        "samples": 7056,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "990782f45766381b",
+        "samples": 7056,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "176400_transient",
+      "expected_hash": "1aa35fb6f8abb09a",
+      "expected_samples": 7056,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "1aa35fb6f8abb09a",
+        "samples": 7056,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "3187a7399ad8993e",
+        "samples": 7056,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "192000_silence",
+      "expected_hash": "97cc35a2251aa383",
+      "expected_samples": 7680,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "97cc35a2251aa383",
+        "samples": 7680,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "97cc35a2251aa383",
+        "samples": 7680,
+        "matches_expected": true
+      }
+    },
+    {
+      "family": "src",
+      "case": "192000_impulse",
+      "expected_hash": "50ca75d7ab7f1cca",
+      "expected_samples": 7680,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "50ca75d7ab7f1cca",
+        "samples": 7680,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "1ab9619f9d9423f1",
+        "samples": 7680,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "192000_sine1k",
+      "expected_hash": "efc0c2ee71bad520",
+      "expected_samples": 7680,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "efc0c2ee71bad520",
+        "samples": 7680,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "42c01af30dc55076",
+        "samples": 7680,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "192000_noise",
+      "expected_hash": "8b0a8d39e516d8d7",
+      "expected_samples": 7680,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "8b0a8d39e516d8d7",
+        "samples": 7680,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "d28c5f6b23335e82",
+        "samples": 7680,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "src",
+      "case": "192000_transient",
+      "expected_hash": "2e5233ae6529729e",
+      "expected_samples": 7680,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "2e5233ae6529729e",
+        "samples": 7680,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "162f0e809786ffd4",
+        "samples": 7680,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "off_default",
+      "expected_hash": "9259aab1c591727e",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "9259aab1c591727e",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "b3b33b801866dbac",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "distortion_default",
+      "expected_hash": "8817d1113ae623f6",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "8817d1113ae623f6",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "0ce9cc9d3db24c0c",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "crush_default",
+      "expected_hash": "8a31616a6fa6aab2",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "8a31616a6fa6aab2",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "4742b0df7b203420",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "combPositive_default",
+      "expected_hash": "267920d638fd9335",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "267920d638fd9335",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "bc87a2a40db457ea",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "combNegative_default",
+      "expected_hash": "b4073e2570f056b0",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "b4073e2570f056b0",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "11b337f8016400a6",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "ringMod_default",
+      "expected_hash": "28a756a09db1f074",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "28a756a09db1f074",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "a31d4711f4cecac7",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delay_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delayFeedback_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delayDub_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "crushDelayFeedback_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "crushDelayDub_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delay16_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delay12_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delay8_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delay3_16_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "looper_default",
+      "expected_hash": "400dc09a72426a7b",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "400dc09a72426a7b",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "84b9fac4b542955e",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "pitch_default",
+      "expected_hash": "5673780a78b12c38",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "5673780a78b12c38",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "d5b97a3bd61cac01",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "distortion_cv1min",
+      "expected_hash": "5fcd5a4fa71958f5",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "5fcd5a4fa71958f5",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "2bc5949f355fe384",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "distortion_cv1max",
+      "expected_hash": "5af78ba07ed4cba8",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "5af78ba07ed4cba8",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "8c7303cef5128441",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "delayFeedback_cv2max",
+      "expected_hash": "5dcc4a73a0c1ba86",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "5dcc4a73a0c1ba86",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "af0f54a12f6c9e81",
+        "samples": 4096,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "looper_replay",
+      "expected_hash": "a538dccc999e97db",
+      "expected_samples": 2048,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "a538dccc999e97db",
+        "samples": 2048,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "7de403153fd34cce",
+        "samples": 2048,
+        "matches_expected": false
+      }
+    },
+    {
+      "family": "integrated",
+      "case": "seq_ringmod",
+      "expected_hash": "be7fb0911be00383",
+      "expected_samples": 4096,
+      "classification": "UNRESOLVED",
+      "x86_64": {
+        "observed_hash": "be7fb0911be00383",
+        "samples": 4096,
+        "matches_expected": true
+      },
+      "arm64": {
+        "observed_hash": "be7fb0911be00383",
+        "samples": 4096,
+        "matches_expected": true
+      }
+    },
+    {
+      "name": "DualRelative_Paper_Minus12",
+      "arm64_actual": "f6b162548fe3de09",
+      "intel_actual": "a5418f72030ca56c",
+      "current_table": "a5418f72030ca56c",
+      "historical_selected": "97a5625193a2326d",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualRelative_Paper_Center64",
+      "arm64_actual": "109d055f10c008d3",
+      "intel_actual": "567ef6fb95cdb472",
+      "current_table": "567ef6fb95cdb472",
+      "historical_selected": "d8b8558a76679c7b",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualRelative_Paper_Plus12",
+      "arm64_actual": "4d9b635f04c11c00",
+      "intel_actual": "66ed4f4c07a50d83",
+      "current_table": "66ed4f4c07a50d83",
+      "historical_selected": "3af2d505b736708e",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualRelative_Eagle_Minus12",
+      "arm64_actual": "0bedfb035b4ee0b6",
+      "intel_actual": "0e9265e82289808a",
+      "current_table": "0e9265e82289808a",
+      "historical_selected": "2efe0fbc75874c4b",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualRelative_Eagle_Center64",
+      "arm64_actual": "916ff838398ce2da",
+      "intel_actual": "d9dbe8c95525e5b8",
+      "current_table": "d9dbe8c95525e5b8",
+      "historical_selected": "7998ba0118727a6e",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualRelative_Eagle_Plus12",
+      "arm64_actual": "103b21012a32de73",
+      "intel_actual": "ddc5f8a84b6c52a3",
+      "current_table": "ddc5f8a84b6c52a3",
+      "historical_selected": "d4a8fbe60fde8a40",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualIndependent_Paper_Cut40_Res32",
+      "arm64_actual": "9dc39565ee5413bd",
+      "intel_actual": "f666bfd056d076fc",
+      "current_table": "f666bfd056d076fc",
+      "historical_selected": "ef139144414c5c37",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualIndependent_Paper_Cut90_Res32",
+      "arm64_actual": "7f6ee86551feea60",
+      "intel_actual": "3acfa698d58aa88e",
+      "current_table": "3acfa698d58aa88e",
+      "historical_selected": "cfb4deaeda072793",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualIndependent_Paper_Cut90_Res63",
+      "arm64_actual": "3c6eb5fe8d0a948e",
+      "intel_actual": "3c42ee56a924fb6c",
+      "current_table": "3c42ee56a924fb6c",
+      "historical_selected": "e3ae9c3d53ff973b",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualIndependent_Eagle_Cut40_Res32",
+      "arm64_actual": "4160e7f71d501196",
+      "intel_actual": "811d9feadbc5c7d3",
+      "current_table": "811d9feadbc5c7d3",
+      "historical_selected": "7e874a740b73392e",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualIndependent_Eagle_Cut90_Res32",
+      "arm64_actual": "35219d8b116eaef2",
+      "intel_actual": "47b06b64de6c9b05",
+      "current_table": "47b06b64de6c9b05",
+      "historical_selected": "f5f0dc043c0a672c",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    },
+    {
+      "name": "DualIndependent_Eagle_Cut90_Res63",
+      "arm64_actual": "7e0e2b5212915cd6",
+      "intel_actual": "7e672b793567f751",
+      "current_table": "7e672b793567f751",
+      "historical_selected": "696ac69cd52ec5f4",
+      "matches_intel": false,
+      "matches_current": false,
+      "matches_historical": false,
+      "family": "dual",
+      "classification_intel": "REFERENCE_SELECTION_DEFECT",
+      "classification_arm64": "UNRESOLVED",
+      "current_contract_basis": "Current public Sub64 -> firmware32; historical-only two-assignment control restores old fingerprints; independent current GCC/Clang/MSVC provenance retained."
+    }
+  ],
+  "integration_limitation": "Original CTest reports 48 native +12 host fingerprint failures on each architecture; observed per-case native hashes and raw samples were not retained. Current exact delay/FX/gain/SRC/DC replay and timing assertions passed; this does not approve the historical acoustic baseline. New capture mode preserves those assertions.",
+  "numerical_metrics": "NOT_AVAILABLE_IN_ORIGINAL_ARTIFACTS; targeted raw captures required, no hash-only platform classification",
+  "provenance_files": {
+    "Tests/References/DualSvfCurrentLinuxProvenance.json": "4e0baf9424a629d1bcdb37923ff78f932858088ab5d2566d97a8e28540ce73a1",
+    "Tests/References/DualSvfCurrentWindowsTimingProvenance.json": "a6b2893d12c0954ee8cf594a1296a2c886e426d4f7eccc3945eeaeca0d368b28",
+    "Tests/References/CurrentAudioReferenceProvenance.json": "222b2be5b052f6f77ac576d1dffbcac6c61ba9aa415b75d9496714aee7cf4ae5",
+    "Tests/Filter/DualSvfSection2Goldens.h": "02ccf4fd24c54a5ccbc9b7afb7f6ee7578bde100dd586884ed237a4f0ea4ab5e",
+    "Tests/Filter/DualSvfCurrentLinuxGoldens.h": "e4113e7a066cbae70f2fe4fe5e56290832c79e51cdec00cef49dd2066688b26a",
+    "Tests/Filter/DualSvfCurrentWindowsTimingGoldens.h": "3843b5c6d4b9f0e01ee6d62336080f38ff012d9970203ca387d44846c459bd1c"
+  },
+  "hash_contracts": {
+    "classic": "clamp[-8,8]; lround(float(x*2^23)); signed32 little-endian byte FNV",
+    "src_and_integrated": "binary32 little-endian byte FNV",
+    "dual": "clamp[-32,32]; llround(double(x)*2^20); unsigned32 XOR word FNV"
+  }
+}
