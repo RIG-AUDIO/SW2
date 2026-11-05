@@ -9,7 +9,7 @@ on:
         type: choice
         description: Run smoke-repro first; do not schedule profiles until its failure is resolved
         default: smoke-repro
-        options: [smoke-repro, Release, Debug, asan-ubsan, tsan]
+        options: [smoke-repro, Release-build-probe, Release, Debug, asan-ubsan, tsan]
       optimize-build:
         type: boolean
         description: Measure cold build-local JUCE cache; prove Release before other profiles

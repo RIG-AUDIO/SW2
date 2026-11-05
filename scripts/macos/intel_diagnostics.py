@@ -104,6 +104,7 @@ class DiagnosticCampaign(Campaign):
             plan=(self.root/'ninja-remaining-plan.log').read_text()
             steps=[int(n) for n in re.findall(r'\[\d+/(\d+)\]',plan)]
             self.report['build_optimization']['remaining_ninja_steps']=max(steps) if steps else 0
+            self.run('compiler-cache-counters-before',[self.cache_tool,'--print-stats'])
             self.save()
             argv=['/usr/bin/time','-l',*argv]
         failure=None
@@ -119,6 +120,11 @@ class DiagnosticCampaign(Campaign):
                     if ninja_log.exists():shutil.copyfile(ninja_log,self.root/'ninja-timing.log')
                     self.run('compiler-cache-statistics',[self.cache_tool,'--show-stats','--verbose'])
                     self.run('compiler-cache-counters',[self.cache_tool,'--print-stats'])
+                    before=dict(line.split() for line in (self.root/'compiler-cache-counters-before.log').read_text().splitlines())
+                    after=dict(line.split() for line in (self.root/'compiler-cache-counters.log').read_text().splitlines())
+                    self.report['build_optimization']['regression_cache_counters_delta']={
+                        key:int(after.get(key,0))-int(before.get(key,0))
+                        for key in ('cache_miss','preprocessed_cache_hit','direct_cache_hit','preprocessed_cache_miss')}
                     statistics=self.root/'compiler-cache/statistics.log'
                     if statistics.exists():
                         shutil.copyfile(statistics,self.root/'compiler-cache-invocations.log')
@@ -142,9 +148,35 @@ class DiagnosticCampaign(Campaign):
         # No fingerprint generation, no approval, no changes to strict native_reference.py.
         return None
 
+class ReleaseBuildProbe(DiagnosticCampaign):
+    """Compile/CTest measurement only; cannot admit the known failed AU validator."""
+    def execute(self):
+        self.report['qualification_scope']='REGRESSION_BUILD_AND_CTEST_ONLY'
+        self.report['native_validation']='NOT_RUN_IN_BUILD_PROBE'
+        self.report['known_qualification_blocker']={
+            'run_url':'https://github.com/RIG-AUDIO/SW2/actions/runs/41983219568',
+            'check':'AU_PLUGINVAL_EDITOR_AUTOMATION_ABORT','state':'UNRESOLVED'}
+        try:
+            require(self.args.profile=='Release' and self.args.optimize_build,'Build probe requires optimized Release')
+            juce=self.prepare()
+            self.verified_candidate()
+            build,config=self.configure(juce)
+            self.regressions(build,juce,config)
+            require(not subprocess.check_output(['git','status','--porcelain'],cwd=SOURCE,text=True).strip(),'Build probe source became dirty')
+            self.finish_evidence()
+            self.report['decision']='REGRESSION_PROBE_PASS_NOT_QUALIFIED'
+        except BaseException as error:
+            self.report['decision']='REGRESSION_PROBE_FAILED'
+            self.report['failure']=str(error)
+            raise
+        finally:
+            self.report['full_qualification']='BLOCKED'
+            self.report['qualification_decision']='BLOCKED_KNOWN_AU_VALIDATOR_FAILURE'
+            self.save()
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--profile',choices=['smoke-repro','Release','Debug','asan-ubsan','tsan'],default='smoke-repro')
+    p.add_argument('--profile',choices=['smoke-repro','Release-build-probe','Release','Debug','asan-ubsan','tsan'],default='smoke-repro')
     p.add_argument('--optimize-build',action='store_true',help='Validate and measure the JUCE-only preprocessor cache')
     p.add_argument('--root',type=Path,required=True);p.add_argument('--candidate-download',type=Path,required=True)
     a=p.parse_args();hosted_root(a.root,SOURCE)
@@ -155,9 +187,11 @@ def main():
     extraction=Path(os.environ['RUNNER_TEMP'])/'diagnostic-candidate';safe_extract_tar(archive,extraction)
     a.candidate=extraction/'unsigned-universal';a.candidate_archive_sha256=ARCHIVE_SHA256
     a.source_sha=os.environ['GITHUB_SHA'];a.base_source_sha='5e7b967db0b52f773f382217a72c6c0c3ff6b8f7'
-    a.arch='x86_64';a.mode='full';a.task='smoke' if a.profile=='smoke-repro' else 'tests'
+    probe=a.profile=='Release-build-probe'
+    a.arch='x86_64';a.mode='full';a.task='build-probe' if probe else 'smoke' if a.profile=='smoke-repro' else 'tests'
+    if probe:a.profile='Release'
     if a.profile=='smoke-repro':a.profile='Release'
-    campaign=DiagnosticCampaign(a)
+    campaign=ReleaseBuildProbe(a) if probe else DiagnosticCampaign(a)
     campaign.report['diagnostic_only']=True
     campaign.report['audio_reference_admission']='REVIEW_REQUIRED'
     campaign.report['full_qualification']='PENDING'

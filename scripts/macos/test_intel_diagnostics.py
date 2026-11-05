@@ -6,9 +6,20 @@ import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
-from intel_diagnostics import DiagnosticCampaign,CANDIDATE_SHA,ARCHIVE_SHA256
+from intel_diagnostics import DiagnosticCampaign,ReleaseBuildProbe,CANDIDATE_SHA,ARCHIVE_SHA256
 from policy import APPLE_GUARD_TEST, verify_apple_guard_test
 class DiagnosticControls(unittest.TestCase):
+    def test_build_probe_can_never_approve_known_validator_failure(self):
+        c=ReleaseBuildProbe.__new__(ReleaseBuildProbe)
+        c.args=SimpleNamespace(profile='Release',optimize_build=True)
+        c.report={};c.save=lambda:None;c.prepare=lambda:'JUCE'
+        c.verified_candidate=lambda:[];c.configure=lambda _:('build','Release')
+        calls=[];c.regressions=lambda *args:calls.append(args);c.finish_evidence=lambda:None
+        with patch('intel_diagnostics.subprocess.check_output',return_value=''):c.execute()
+        self.assertEqual(len(calls),1)
+        self.assertEqual(c.report['full_qualification'],'BLOCKED')
+        self.assertEqual(c.report['native_validation'],'NOT_RUN_IN_BUILD_PROBE')
+        self.assertNotIn('NATIVE_PROFILE_PASS',c.report['decision'])
     def test_guard_test_exception_is_exact(self):
         source=Path(__file__).resolve().parents[2]
         verify_apple_guard_test(source)

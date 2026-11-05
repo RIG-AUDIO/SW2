@@ -289,6 +289,10 @@ class Campaign(PublicInfrastructure):
         if self.args.profile != 'Release':
             self.validate_native_bundles(bundles)
         require(self.actual_hosts(host, bundles, external=self.args.profile == 'Release'), 'Actual native plugin preflight failed')
+        self.regressions(build,juce,config)
+
+    def regressions(self,build,juce,config):
+        """Unchanged complete build, instrumentation audit and CTest campaign."""
         self.run('build-native-tests', ['cmake', '--build', build, '--target', 'SwaraXTQualificationTests',
                  '--parallel', '2', '--', '-k', '0'], timeout=10800)
         commands = json.loads((build / 'compile_commands.json').read_text())
@@ -313,7 +317,7 @@ class Campaign(PublicInfrastructure):
         test_timeout = 16200 if self.args.arch == 'x86_64' and self.args.profile == 'tsan' else 10800
         self.report['ctest_timeout_seconds'] = test_timeout
         self.save()
-        # Actual host checks have already passed; every regression must pass too.
+        # Every registered regression must pass; this helper does not admit hosts.
         ctest = ['ctest', '--test-dir', build, '--output-on-failure', '--no-tests=error',
                  '--test-output-size-passed', '16777216', '--test-output-size-failed', '16777216',
                  '--parallel', '1', '--output-junit', self.root / 'ctest.xml']
