@@ -23,6 +23,15 @@ DARWIN_SHA256='cf240009630b605b775c7c5c7b7105a3b196c79f31af322c1557969aa28003fc'
 
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
+def ninja_progress(text):
+    """Keep dry-run regeneration distinct from the real compiler/link phase."""
+    counters=[tuple(map(int,item)) for item in re.findall(r'\[(\d+)/(\d+)\]',text)]
+    totals=list(dict.fromkeys(total for _,total in counters))
+    return {'observed_phase_totals':totals,
+            'last_completed_step':counters[-1][0] if counters else None,
+            'last_phase_total':counters[-1][1] if counters else None,
+            'requires_cmake_regeneration':'Re-running CMake' in text}
+
 def configure_cache(root,env,namespace):
     root=Path(root);root.mkdir(parents=True,exist_ok=True)
     config=root/'ccache.conf'

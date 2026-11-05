@@ -7,9 +7,16 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from compiler_cache import configure_cache,inventory,launch,write_launcher
+from compiler_cache import configure_cache,inventory,launch,write_launcher,ninja_progress
 
 class CacheControls(unittest.TestCase):
+    def test_ninja_regeneration_is_not_a_two_step_compilation(self):
+        plan='[0/2] Re-checking globbed directories...\n[1/2] Re-running CMake...\n'
+        self.assertTrue(ninja_progress(plan)['requires_cmake_regeneration'])
+        actual=plan+'[1/4735] Building object\n[4735/4735] Linking test\n'
+        self.assertEqual(ninja_progress(actual)['observed_phase_totals'],[2,4735])
+        self.assertEqual(ninja_progress(actual)['last_completed_step'],4735)
+        self.assertEqual(ninja_progress('')['last_phase_total'],None)
     def test_single_path_survives_juceaide_passthrough(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);child=root/'child';child.mkdir()

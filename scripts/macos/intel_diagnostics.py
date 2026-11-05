@@ -106,8 +106,10 @@ class DiagnosticCampaign(Campaign):
             build=self.root/'build'
             self.run('ninja-remaining-plan',['ninja','-C',build,'-n','SwaraXTQualificationTests'])
             plan=(self.root/'ninja-remaining-plan.log').read_text()
-            steps=[int(n) for n in re.findall(r'\[\d+/(\d+)\]',plan)]
-            self.report['build_optimization']['remaining_ninja_steps']=max(steps) if steps else 0
+            from compiler_cache import ninja_progress
+            progress=ninja_progress(plan)
+            self.report['build_optimization']['dry_run_progress']=progress
+            self.report['build_optimization']['remaining_ninja_steps']=None if progress['requires_cmake_regeneration'] else progress['last_phase_total']
             self.run('compiler-cache-counters-before',[self.cache_tool,'--print-stats'])
             self.save()
             argv=['/usr/bin/time','-l',*argv]
@@ -133,6 +135,8 @@ class DiagnosticCampaign(Campaign):
                     if statistics.exists():
                         shutil.copyfile(statistics,self.root/'compiler-cache-invocations.log')
                     build_log=(self.root/'build-native-tests.log').read_text(errors='replace')
+                    from compiler_cache import ninja_progress
+                    self.report['build_optimization']['actual_ninja_progress']=ninja_progress(build_log)
                     rss=re.findall(r'(\d+)\s+maximum resident set size',build_log)
                     self.report['build_optimization']['time_maximum_resident_set_size_bytes']=int(rss[-1]) if rss else None
                     self.save()
