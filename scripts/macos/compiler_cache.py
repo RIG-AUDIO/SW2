@@ -54,6 +54,15 @@ def install(root):
         raise RuntimeError('Unexpected ccache version')
     return tool
 
+def write_launcher(path,tool,juce,generated):
+    """A single executable path survives JUCE's recursive CMake list forwarding."""
+    path=Path(path)
+    argv=[sys.executable,str(Path(__file__).resolve()),'--launch',str(tool),str(juce),str(generated)]
+    path.write_text('#!/bin/sh\nexec '+shlex.join(argv)+' "$@"\n')
+    path.chmod(0o700)
+    return str(path)
+
+
 def inventory(commands):
     files=collections.Counter(c['file'] for c in commands)
     def args(c):
@@ -128,7 +137,7 @@ def cmake_control(tool,root,compiler,env):
     def run(args):return subprocess.check_output(list(map(str,args)),env=env,stderr=subprocess.STDOUT,text=True)
     run(['cmake','-S',root,'-B',build,'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_COMPILER='+str(compiler)])
     before=json.loads((build/'compile_commands.json').read_text())
-    launcher=';'.join([sys.executable,str(Path(__file__).resolve()),'--launch',str(tool),str(root/'JUCE'),str(root/'not-generated.mm')])
+    launcher=write_launcher(root/'compiler-launcher',tool,root/'JUCE',root/'not-generated.mm')
     env=configure_cache(root/'cache',env,'cmake-equivalence-control')
     run(['cmake','-S',root,'-B',build,'-DCMAKE_CXX_COMPILER_LAUNCHER='+launcher])
     after=json.loads((build/'compile_commands.json').read_text())

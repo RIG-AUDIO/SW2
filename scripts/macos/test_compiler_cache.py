@@ -3,12 +3,24 @@
 import os
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from compiler_cache import configure_cache,inventory,launch
+from compiler_cache import configure_cache,inventory,launch,write_launcher
 
 class CacheControls(unittest.TestCase):
+    def test_single_path_survives_juceaide_passthrough(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);child=root/'child';child.mkdir()
+            (child/'CMakeLists.txt').write_text('cmake_minimum_required(VERSION 3.22)\nproject(ForwardingControl LANGUAGES NONE)\nif(NOT CMAKE_CXX_COMPILER_LAUNCHER STREQUAL EXPECTED)\nmessage(FATAL_ERROR "Launcher argument changed")\nendif()\n')
+            script=root/'forward.cmake'
+            # Same list(APPEND)/unquoted execute_process forwarding as pinned JUCE.
+            script.write_text('list(APPEND PASSTHROUGH_ARGS "-DCMAKE_CXX_COMPILER_LAUNCHER=${LAUNCHER}")\nexecute_process(COMMAND "${CMAKE_COMMAND}" -S "${CHILD}" -B "${BUILD}" "-DEXPECTED=${LAUNCHER}" ${PASSTHROUGH_ARGS} RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE output)\nif(result)\nmessage(FATAL_ERROR "${output}")\nendif()\n')
+            def forward(value,build):return subprocess.run(['cmake','-DLAUNCHER='+value,'-DCHILD='+str(child),'-DBUILD='+str(root/build),'-P',str(script)],capture_output=True,text=True)
+            self.assertNotEqual(forward('/python;/script;--launch;/cache','old').returncode,0)
+            launcher=write_launcher(root/'single launcher','/cache','/JUCE','/generated')
+            result=forward(launcher,'corrected');self.assertEqual(result.returncode,0,result.stdout+result.stderr)
     def test_untrusted_cache_environment_is_not_inherited(self):
         with tempfile.TemporaryDirectory() as d:
             env=configure_cache(d,{'PATH':'/bin','CCACHE_IGNOREOPTIONS':'-fsanitize=*','CCACHE_SLOPPINESS':'time_macros','CCACHE_REMOTE_STORAGE':'https://untrusted'},'x86_64-Release')

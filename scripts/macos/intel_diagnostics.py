@@ -39,8 +39,8 @@ class DiagnosticCampaign(Campaign):
             cmake_control=compiler_cache.cmake_control(self.cache_tool,self.root/'cache-cmake-control',
                 subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env)
             (self.root/'cache-cmake-equivalence.json').write_text(json.dumps(cmake_control,indent=2)+'\n')
-            launcher=';'.join([sys.executable,str(SOURCE/'scripts/macos/compiler_cache.py'),'--launch',
-                str(self.cache_tool),str(juce),str(build/'generated/midi-capacity/juce_audio_utils.mm')])
+            launcher=compiler_cache.write_launcher(self.root/'compiler-launcher',self.cache_tool,juce,
+                build/'generated/midi-capacity/juce_audio_utils.mm')
             self.run('configure-compiler-cache',['cmake','-S',SOURCE,'-B',build,
                 *['-DCMAKE_'+language+'_COMPILER_LAUNCHER='+launcher for language in ('C','CXX','OBJC','OBJCXX')]])
             after=json.loads((build/'compile_commands.json').read_text())
