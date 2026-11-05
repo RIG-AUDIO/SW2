@@ -8,7 +8,21 @@ import unittest
 from unittest.mock import patch
 from intel_diagnostics import DiagnosticCampaign,ReleaseBuildProbe,CANDIDATE_SHA,ARCHIVE_SHA256
 from policy import APPLE_GUARD_TEST, verify_apple_guard_test
+from ci import native_test_binaries
 class DiagnosticControls(unittest.TestCase):
+    def test_native_test_architecture_is_verified_from_actual_binaries(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);tests=[]
+            for i in range(11):
+                executable=root/('test'+str(i));executable.write_bytes(b'controlled fixture')
+                tests.append({'name':executable.name,'command':[str(executable)]})
+            with patch('ci.subprocess.check_output',return_value='arm64\n'):
+                self.assertEqual(len(native_test_binaries(root,{'tests':tests},'arm64')),11)
+            with patch('ci.subprocess.check_output',return_value='x86_64\n'):
+                with self.assertRaisesRegex(RuntimeError,'native architecture'):
+                    native_test_binaries(root,{'tests':tests},'arm64')
+            with self.assertRaisesRegex(RuntimeError,'lacks an executable'):
+                native_test_binaries(root,{'tests':[{'name':'missing'}]},'arm64')
     def test_build_probe_can_never_approve_known_validator_failure(self):
         c=ReleaseBuildProbe.__new__(ReleaseBuildProbe)
         c.args=SimpleNamespace(profile='Release',optimize_build=True)

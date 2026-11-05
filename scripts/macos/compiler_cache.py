@@ -90,14 +90,16 @@ def inventory(commands):
         'lto_commands':sum('-flto' in shlex.split(c['command']) for c in commands),
         'sources':dict(sorted(files.items()))}
 
-def equivalence_controls(tool,root,compiler,env,apple=False):
+def equivalence_controls(tool,root,compiler,env,apple=False,arch='x86_64'):
     """Compare cached and original compiler objects; changed semantics must miss."""
     root=Path(root);root.mkdir()
     env=configure_cache(root/'cache',env,'independent-equivalence-controls')
     source=root/'control.cpp';source.write_text('#include "value.h"\nextern "C" int value() { return VALUE; }\n')
     inc=root/'include';inc.mkdir();header=inc/'value.h';header.write_text('#ifndef VALUE\n#define VALUE 17\n#endif\n')
     options=['-std=c++17','-O2','-g','-fPIC','-fvisibility=hidden','-fno-omit-frame-pointer','-Wall','-Wextra','-Werror','-I'+str(inc)]
-    if apple:options+=['-arch','x86_64','-mmacosx-version-min=11.0']
+    if apple:
+        if arch not in ('x86_64','arm64'):raise RuntimeError('Unsupported Apple control architecture')
+        options+=['-arch',arch,'-mmacosx-version-min=11.0']
     cases=[('original',[]),('unused-definition',['-DUNUSED_TARGET_DIAGNOSTIC=1']),
            ('effective-definition',['-DVALUE=19']),('optimization',['-O0']),
            ('asan',['-fsanitize=address,undefined,vptr','-fno-sanitize-recover=all']),
@@ -125,7 +127,7 @@ def equivalence_controls(tool,root,compiler,env,apple=False):
     return {'decision':'PASS','objects':records,'changed_header_sha256':sha(changed),'statistics':counts,
             'limitations':'Representative object controls; full configured inventory and execution are recorded separately.'}
 
-def cmake_control(tool,root,compiler,env):
+def cmake_control(tool,root,compiler,env,arch=None):
     root=Path(root);root.mkdir()
     modules=root/'JUCE/modules';modules.mkdir(parents=True)
     source=modules/'module.cpp';source.write_text('extern "C" int module() {return 31;}\n')
@@ -135,7 +137,8 @@ def cmake_control(tool,root,compiler,env):
         'add_library(second OBJECT JUCE/modules/module.cpp production.cpp)\ntarget_compile_definitions(second PRIVATE UNUSED_TARGET_ONLY=1)\n')
     build=root/'build'
     def run(args):return subprocess.check_output(list(map(str,args)),env=env,stderr=subprocess.STDOUT,text=True)
-    run(['cmake','-S',root,'-B',build,'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_COMPILER='+str(compiler)])
+    architecture=['-DCMAKE_OSX_ARCHITECTURES='+arch,'-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0'] if arch else []
+    run(['cmake','-S',root,'-B',build,'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_COMPILER='+str(compiler),*architecture])
     before=json.loads((build/'compile_commands.json').read_text())
     launcher=write_launcher(root/'compiler-launcher',tool,root/'JUCE',root/'not-generated.mm')
     env=configure_cache(root/'cache',env,'cmake-equivalence-control')

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 MontroneDSP
 # SPDX-License-Identifier: GPL-3.0-or-later
-name: Manual Intel native diagnostics
+name: Manual macOS native diagnostics
 # Focused host symbol-isolation control covers both C++ and Objective-C++ objects.
 on:
   workflow_dispatch:
@@ -14,6 +14,11 @@ on:
         type: boolean
         description: Measure cold build-local JUCE cache; prove Release before other profiles
         default: false
+      architecture:
+        type: choice
+        description: Native runner and build architecture; never share caches across architectures
+        default: x86_64
+        options: [x86_64, arm64]
   push:
     branches: [ci/macos-130-qualification]
     paths: [.github/workflows/macos-intel-native-diagnostics.yml]
@@ -21,12 +26,13 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: sw2-intel-diagnostics-${{ github.ref }}-${{ inputs.profile || 'smoke-repro' }}
+  group: sw2-intel-diagnostics-${{ github.ref }}-${{ inputs.profile || 'smoke-repro' }}-${{ inputs.architecture || 'x86_64' }}
   cancel-in-progress: false
 jobs:
   diagnostic:
+    name: diagnostic (${{ inputs.architecture || 'x86_64' }})
     if: github.repository == 'RIG-AUDIO/SW2'
-    runs-on: macos-15-intel
+    runs-on: ${{ inputs.architecture == 'arm64' && 'macos-15' || 'macos-15-intel' }}
     timeout-minutes: 350
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
@@ -52,11 +58,12 @@ jobs:
           RUNNER_ENVIRONMENT: ${{ runner.environment }}
           DIAGNOSTIC_PROFILE: ${{ inputs.profile || 'smoke-repro' }}
           OPTIMIZE_BUILD: ${{ inputs.optimize-build || false }}
+          DIAGNOSTIC_ARCH: ${{ inputs.architecture || 'x86_64' }}
         run: |
           options=()
           if [[ "$OPTIMIZE_BUILD" == true ]]; then options+=(--optimize-build); fi
-          python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE" "${options[@]}" \
-            --root "$RUNNER_TEMP/intel-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
+          python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE" --arch "$DIAGNOSTIC_ARCH" "${options[@]}" \
+            --root "$RUNNER_TEMP/native-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
       - name: Verify owned AU cleanup after failure
         if: always()
         env:
@@ -64,18 +71,18 @@ jobs:
         run: >-
           python3 scripts/macos/ci.py cleanup --source-sha "$GITHUB_SHA"
           --base-source-sha 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7 --mode full
-          --root "$RUNNER_TEMP/intel-diagnostic"
+          --root "$RUNNER_TEMP/native-diagnostic"
       - name: Preserve separate profile evidence including failures
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: intel-diagnostic-${{ inputs.profile || 'smoke-repro' }}-${{ github.sha }}-${{ github.run_attempt }}
+          name: native-diagnostic-${{ inputs.architecture || 'x86_64' }}-${{ inputs.profile || 'smoke-repro' }}-${{ github.sha }}-${{ github.run_attempt }}
           path: |
-            ${{ runner.temp }}/intel-diagnostic/*.json
-            ${{ runner.temp }}/intel-diagnostic/*.log
-            ${{ runner.temp }}/intel-diagnostic/*.xml
-            ${{ runner.temp }}/intel-diagnostic/*.png
-            ${{ runner.temp }}/intel-diagnostic/owned-login-*/*.log
-            ${{ runner.temp }}/intel-diagnostic/owned-login-*/cleanup.json
+            ${{ runner.temp }}/native-diagnostic/*.json
+            ${{ runner.temp }}/native-diagnostic/*.log
+            ${{ runner.temp }}/native-diagnostic/*.xml
+            ${{ runner.temp }}/native-diagnostic/*.png
+            ${{ runner.temp }}/native-diagnostic/owned-login-*/*.log
+            ${{ runner.temp }}/native-diagnostic/owned-login-*/cleanup.json
           if-no-files-found: error
           retention-days: 7

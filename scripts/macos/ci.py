@@ -33,6 +33,23 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def native_test_binaries(build,listing,architecture):
+    """Verify actual compiled test executables, not just intended CMake flags."""
+    build=Path(build).resolve();result={}
+    for test in listing['tests']:
+        require(test.get('command'),'Registered test lacks an executable command: '+test['name'])
+        executable=Path(test['command'][0]).resolve()
+        if not executable.is_relative_to(build):continue  # External Python/CMake tools.
+        require(executable.is_file(),'Mandatory test executable missing: '+str(executable))
+        relative=executable.relative_to(build).as_posix()
+        if relative in result:continue
+        slices=subprocess.check_output(['lipo','-archs',executable],text=True,timeout=30).split()
+        require(slices==[architecture],'Test executable is not the requested native architecture: '+relative)
+        result[relative]={'architectures':slices,'sha256':digest(executable)}
+    require(len(result)>10,'Missing mandatory native test executable inventory')
+    return result
+
+
 class Campaign(PublicInfrastructure):
     def __init__(self, args):
         self.args = args
@@ -310,6 +327,7 @@ class Campaign(PublicInfrastructure):
         require(not any(p['name'] == 'DISABLED' and p['value'] for t in listing['tests'] for p in t['properties']), 'Disabled tests require explicit review')
         (self.root / 'ctest-inventory.json').write_text(json.dumps(listing, indent=2) + '\n')
         self.report['test_count'] = len(listing['tests'])
+        self.report['native_test_binaries'] = native_test_binaries(build,listing,self.args.arch)
         # Intel TSan runs the complete board/SRC endpoint matrix much slower
         # than the other profiles. Budget 270 minutes for the unchanged suite;
         # its individual 120-second case watchdogs still reject stalled cases.

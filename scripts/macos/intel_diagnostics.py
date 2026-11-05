@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 MontroneDSP
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Manual Intel diagnostics against the immutable approved universal candidate.
+"""Manual native diagnostics against the immutable approved universal candidate.
 
 Technical execution is separate from reference admission; never calls the full gate.
 """
@@ -25,6 +25,10 @@ class DiagnosticCampaign(Campaign):
         build,config=super().configure(juce,universal)
         if getattr(self.args, 'optimize_build', False):
             import compiler_cache
+            self.run('hardware-memory',['sysctl','-n','hw.memsize'])
+            self.run('hardware-cpus',['sysctl','-n','hw.logicalcpu'])
+            self.report['hardware']={'memory_bytes':int((self.root/'hardware-memory.log').read_text()),
+                'logical_cpus':int((self.root/'hardware-cpus.log').read_text())}
             before=json.loads((build/'compile_commands.json').read_text())
             inventory_before=json.loads(subprocess.check_output(['ctest','--test-dir',build,'--show-only=json-v1'],text=True))
             self.cache_tool=compiler_cache.install(self.root/'compiler-cache-tool')
@@ -34,10 +38,10 @@ class DiagnosticCampaign(Campaign):
             for name in ('sloppiness','ignore_options','remote_storage','base_dir'):
                 require(any(line.endswith(name+' = ') for line in settings.splitlines()),'Unsafe compiler-cache setting: '+name)
             controls=compiler_cache.equivalence_controls(self.cache_tool,self.root/'cache-equivalence-controls',
-                subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env,apple=True)
+                subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env,apple=True,arch=self.args.arch)
             (self.root/'cache-equivalence.json').write_text(json.dumps(controls,indent=2)+'\n')
             cmake_control=compiler_cache.cmake_control(self.cache_tool,self.root/'cache-cmake-control',
-                subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env)
+                subprocess.check_output(['xcrun','--find','clang++'],text=True).strip(),self.env,arch=self.args.arch)
             (self.root/'cache-cmake-equivalence.json').write_text(json.dumps(cmake_control,indent=2)+'\n')
             launcher=compiler_cache.write_launcher(self.root/'compiler-launcher',self.cache_tool,juce,
                 build/'generated/midi-capacity/juce_audio_utils.mm')
@@ -155,6 +159,7 @@ class ReleaseBuildProbe(DiagnosticCampaign):
         self.report['native_validation']='NOT_RUN_IN_BUILD_PROBE'
         self.report['known_qualification_blocker']={
             'run_url':'https://github.com/RIG-AUDIO/SW2/actions/runs/41983219568',
+            'architecture':'x86_64',
             'check':'AU_PLUGINVAL_EDITOR_AUTOMATION_ABORT','state':'UNRESOLVED'}
         try:
             require(self.args.profile=='Release' and self.args.optimize_build,'Build probe requires optimized Release')
@@ -178,6 +183,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--profile',choices=['smoke-repro','Release-build-probe','Release','Debug','asan-ubsan','tsan'],default='smoke-repro')
     p.add_argument('--optimize-build',action='store_true',help='Validate and measure the JUCE-only preprocessor cache')
+    p.add_argument('--arch',choices=['x86_64','arm64'],default='x86_64')
     p.add_argument('--root',type=Path,required=True);p.add_argument('--candidate-download',type=Path,required=True)
     a=p.parse_args();hosted_root(a.root,SOURCE)
     a.candidate_download=owned_path(a.candidate_download,os.environ['RUNNER_TEMP'])
@@ -188,7 +194,7 @@ def main():
     a.candidate=extraction/'unsigned-universal';a.candidate_archive_sha256=ARCHIVE_SHA256
     a.source_sha=os.environ['GITHUB_SHA'];a.base_source_sha='5e7b967db0b52f773f382217a72c6c0c3ff6b8f7'
     probe=a.profile=='Release-build-probe'
-    a.arch='x86_64';a.mode='full';a.task='build-probe' if probe else 'smoke' if a.profile=='smoke-repro' else 'tests'
+    a.mode='full';a.task='build-probe' if probe else 'smoke' if a.profile=='smoke-repro' else 'tests'
     if probe:a.profile='Release'
     if a.profile=='smoke-repro':a.profile='Release'
     campaign=ReleaseBuildProbe(a) if probe else DiagnosticCampaign(a)
