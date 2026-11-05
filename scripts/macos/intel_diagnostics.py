@@ -115,6 +115,8 @@ class DiagnosticCampaign(Campaign):
         finally:
             if name=='build-native-tests' and getattr(self.args,'optimize_build',False):
                 try:
+                    ninja_log=self.root/'build/.ninja_log'
+                    if ninja_log.exists():shutil.copyfile(ninja_log,self.root/'ninja-timing.log')
                     self.run('compiler-cache-statistics',[self.cache_tool,'--show-stats','--verbose'])
                     self.run('compiler-cache-counters',[self.cache_tool,'--print-stats'])
                     statistics=self.root/'compiler-cache/statistics.log'

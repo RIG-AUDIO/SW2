@@ -31,9 +31,21 @@ def snapshot(group):
     members=[]
     for line in text.splitlines():
         fields=line.split(None,6)
-        if len(fields)==7 and int(fields[2])==group:
+        if len(fields)!=7:continue
+        pid,ppid,pgid,uid,rss=map(int,fields[:5])
+        # Ninja gives each subcommand another process group in our session.
+        # Include it even after its immediate parent exits. Never signal these
+        # other groups by numeric PGID: their leader PID is not reserved by us.
+        owned=pgid==group
+        if not owned:
+            try:owned=os.getsid(pid)==group
+            except ProcessLookupError:continue
+            except PermissionError:
+                if uid==os.getuid():raise
+                continue
+        if owned:
             members.append(dict(zip(('pid','ppid','pgid','uid','rss_kib','state','command'),
-                                    [*map(int,fields[:5]),*fields[5:]])))
+                                    [pid,ppid,pgid,uid,rss,*fields[5:]])))
     return members
 
 def supervise(status_fd, control_fd, argv):
@@ -72,11 +84,13 @@ def run_process(argv, *, cwd, env, stdout, timeout):
         previous_term=signal.signal(signal.SIGTERM,terminated)
     report={'success':False,'errors':[],'signals':[],'remaining':[],
             'timed_out':False,'cancelled':False,'peak_group_rss_kib_sampled':0,
+            'peak_session_rss_kib_sampled':0,
             'peak_compiler_rss_kib_sampled':0,'ownership':'RESERVED_UNREAPED_SESSION_LEADER'}
     def observe():
         try:
             members=snapshot(process.pid)
-            report['peak_group_rss_kib_sampled']=max(report['peak_group_rss_kib_sampled'],sum(m['rss_kib'] for m in members))
+            report['peak_group_rss_kib_sampled']=max(report['peak_group_rss_kib_sampled'],sum(m['rss_kib'] for m in members if m['pgid']==process.pid))
+            report['peak_session_rss_kib_sampled']=max(report['peak_session_rss_kib_sampled'],sum(m['rss_kib'] for m in members))
             report['peak_compiler_rss_kib_sampled']=max([report['peak_compiler_rss_kib_sampled']]+[m['rss_kib'] for m in members if 'clang' in Path(m['command']).name or Path(m['command']).name in ('cc1plus','cc1')])
             return [m for m in members if m['pid']!=process.pid and not m['state'].startswith('Z')]
         except (OSError,subprocess.SubprocessError,ValueError) as error:

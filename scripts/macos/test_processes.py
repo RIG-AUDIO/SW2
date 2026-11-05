@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import shlex
 import unittest
 from unittest.mock import patch
 from processes import run_process
@@ -117,5 +118,39 @@ class ProcessTests(unittest.TestCase):
                     campaign.run('build',['compiler'])
             self.assertEqual(campaign.report['commands'][0]['exit_code'],124)
             self.assertFalse(campaign.report['commands'][0]['process_cleanup']['success'])
+    def test_ninja_subcommand_groups_are_observed_and_stopped(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);build=root/'build.ninja'
+            build.write_text('rule wait\n  command = '+shlex.join([sys.executable,'-c','import time;time.sleep(30)'])+'\nbuild held: wait\n')
+            with (root/'ninja.log').open('w') as stream:
+                result=run_process(['ninja','-f',build],cwd=root,env=os.environ.copy(),stdout=stream,timeout=.5)
+            self.assertEqual(result,124);self.assertTrue(result.cleanup['success'],result.cleanup)
+            descendants=result.cleanup['descendants_before_cleanup']
+            self.assertTrue(any(p['pgid']!=result.cleanup['pgid'] for p in descendants),descendants)
+            self.assertEqual(result.cleanup['remaining'],[])
+    def test_noncooperating_other_group_is_reported_not_signalled(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);release=root/'release-child'
+            source=f'import os,signal,time,pathlib\nif os.fork()==0:\n os.setpgid(0,0);signal.signal(signal.SIGTERM,signal.SIG_IGN)\n while not pathlib.Path({str(release)!r}).exists():time.sleep(.05)\nelse:time.sleep(30)'
+            groups=[];original=os.killpg
+            def signal_group(group,sig):groups.append(group);return original(group,sig)
+            try:
+                with (root/'different-group.log').open('w') as stream,patch('processes.os.killpg',side_effect=signal_group):
+                    result=run_process([sys.executable,'-c',source],cwd=root,env=os.environ.copy(),stdout=stream,timeout=.4)
+                self.assertEqual(result,124);self.assertFalse(result.cleanup['success'])
+                self.assertTrue(result.cleanup['remaining'])
+                self.assertTrue(all(p['pgid']!=result.cleanup['pgid'] for p in result.cleanup['remaining']))
+                self.assertTrue(all(group==result.cleanup['pgid'] for group in groups))
+            finally:
+                # Cooperative release for this deliberately unkillable-by-group
+                # control; never signal an unreserved foreign group to tidy tests.
+                release.write_text('done')
+                if 'result' in locals():
+                    for child in result.cleanup['remaining']:
+                        deadline=time.monotonic()+3
+                        while time.monotonic()<deadline:
+                            status=subprocess.run(['ps','-p',str(child['pid']),'-o','stat='],capture_output=True,text=True).stdout.strip()
+                            if not status or status.startswith('Z'):break
+                            time.sleep(.05)
 
 if __name__=='__main__':unittest.main()
