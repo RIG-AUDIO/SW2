@@ -3,7 +3,7 @@
 #include "Plugin/PluginProcessor.h"
 #include "Plugin/PluginEditor.h"
 #include "Plugin/SwaraXtParameterLayout.h"
-#if defined(_MSC_VER) || defined(__linux__)
+#if defined(_MSC_VER) || defined(__linux__) || (defined(__APPLE__) && defined(__x86_64__))
 #include "DualSvfCurrentLinuxGoldens.h" // Host values independently qualified on MSVC.
 #include "DualSvfCurrentWindowsTimingGoldens.h"
 #else

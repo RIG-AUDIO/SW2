@@ -138,6 +138,7 @@ def verify_apple_guard_test(source):
             'Unreviewed Apple guard-page test integration')
 
 DUAL_REFERENCE_TEST = 'Tests/Filter/DualSvfSection2TestsMain.cpp'
+DUAL_INTEGRATION_TEST = 'Tests/Filter/DualSvfIntegrationAuditMain.cpp'
 
 def verify_dual_reference_selection(source):
     original = subprocess.check_output(['git', 'show', BASE_SHA + ':' + DUAL_REFERENCE_TEST], cwd=source, text=True)
@@ -147,17 +148,25 @@ def verify_dual_reference_selection(source):
     require((Path(source) / DUAL_REFERENCE_TEST).read_text() == expected,
             'Unreviewed Dual SVF reference-selection change')
 
+def verify_dual_integration_selection(source):
+    original = subprocess.check_output(['git','show',BASE_SHA+':'+DUAL_INTEGRATION_TEST],cwd=source,text=True)
+    old = '#if defined(_MSC_VER) || defined(__linux__)'
+    require(original.count(old)==1,'Unexpected original integration selector')
+    expected = original.replace(old,old+' || (defined(__APPLE__) && defined(__x86_64__))',1)
+    require((Path(source)/DUAL_INTEGRATION_TEST).read_text()==expected,'Unreviewed integration selector change')
+
 def compare_public(source, baseline, checkout_sha, base_sha):
     require(base_sha == BASE_SHA, 'Approved SW2 base required')
     before, after = git_tree(source, BASE_SHA), git_tree(source, checkout_sha)
     differences = [p for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
     parser_paths = {'Source/Plugin/SwaraXtParameterLayout.cpp', 'Source/Tuning/TuningTable.cpp', 'Source/Tuning/RealFromChars.h', 'REUSE.toml', 'LICENSES/MIT.txt'}
-    allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake', APPLE_GUARD_TEST, DUAL_REFERENCE_TEST}
+    allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake', APPLE_GUARD_TEST, DUAL_REFERENCE_TEST, DUAL_INTEGRATION_TEST}
     for path in differences:
         require(path in parser_paths or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
                 or path in ('.github/workflows/macos-qualification.yml', '.github/workflows/macos-development-build.yml', '.github/workflows/macos-intel-native-diagnostics.yml'), 'Product source changed: ' + path)
     verify_apple_guard_test(source)
     verify_dual_reference_selection(source)
+    verify_dual_integration_selection(source)
     # Exact, reviewed parser-only exception; arbitrary production changes still fail.
     original = subprocess.check_output(['git', 'show', BASE_SHA + ':Source/Tuning/TuningTable.cpp'], cwd=source).decode()
     expected = original.replace('#include "Tuning/TuningTable.h"', '#include "Tuning/TuningTable.h"\n#include "Tuning/RealFromChars.h"')

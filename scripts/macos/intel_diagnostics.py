@@ -13,7 +13,7 @@ import re
 import shutil
 import sys
 from ci import Campaign, SOURCE, digest
-from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path, APPLE_GUARD_TEST, verify_apple_guard_test, DUAL_REFERENCE_TEST, verify_dual_reference_selection
+from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path, APPLE_GUARD_TEST, verify_apple_guard_test, DUAL_REFERENCE_TEST, verify_dual_reference_selection, DUAL_INTEGRATION_TEST, verify_dual_integration_selection
 
 CANDIDATE_SHA='3a287d0764cbbd57285582a25aa41b58ed6b03b1'
 CANDIDATE_RUN='41924729723'
@@ -89,9 +89,10 @@ class DiagnosticCampaign(Campaign):
             'target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)'+visibility_hook)
         require((SOURCE/'Tests/Apple/CMakeLists.txt').read_text()==expected_tests,'Unreviewed host visibility integration')
         test_diff=subprocess.check_output(['git','diff','--name-only',CANDIDATE_SHA,'HEAD','--','Tests'],cwd=SOURCE,text=True).splitlines()
-        require(test_diff==['Tests/Apple/CMakeLists.txt',DUAL_REFERENCE_TEST,APPLE_GUARD_TEST],'Current regression drivers differ from approved candidate')
+        require(test_diff==['Tests/Apple/CMakeLists.txt',DUAL_INTEGRATION_TEST,DUAL_REFERENCE_TEST,APPLE_GUARD_TEST],'Current regression drivers differ from approved candidate')
         verify_apple_guard_test(SOURCE)
         verify_dual_reference_selection(SOURCE)
+        verify_dual_integration_selection(SOURCE)
         bundles=[self.args.candidate/'Swara XT.component',self.args.candidate/'Swara XT.vst3']
         for bundle in bundles:
             require(check_bundle(bundle,self.version,['arm64','x86_64'])==manifest['binaries'][bundle.name],'Candidate binary identity mismatch')
