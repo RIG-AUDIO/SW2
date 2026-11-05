@@ -101,6 +101,8 @@ def driver(source,case):
 def overlay(source,destination,strict=False):
     destination.mkdir(parents=True,exist_ok=False)
     shutil.copytree(source/'Source',destination/'Source')
+    # Several production headers use relative paths into the pinned dependency tree.
+    (destination/'third_party').symlink_to(source/'third_party',target_is_directory=True)
     records={}
     for p in (destination/'Source').rglob('*'):
         if not p.is_file():continue
@@ -165,12 +167,23 @@ class BoundaryCampaign(Campaign):
                 (self.root/(variant+'-compiled-source.json')).write_text(json.dumps(manifest,indent=2)+'\n')
                 build,_=self.configure(juce)
                 shutil.copyfile(build/'compile_commands.json',self.root/(variant+'-compile-commands.json'))
+                compiled=json.loads((build/'compile_commands.json').read_text())
+                for target in TARGETS.values():
+                    inputs={entry['file'] for entry in compiled if f'CMakeFiles/{target}.dir/' in entry['command']}
+                    for relative in ('Engine/SwaraXtEngine.cpp','Engine/SampleRate/HostResampler.cpp','Engine/DspBoard/BoardEffects.cpp'):
+                        require(str(self.overlay_root/'Source'/relative) in inputs and str(SOURCE/'Source'/relative) not in inputs,
+                                'Runtime overlay is not active for '+target+': '+relative)
                 self.run('build-'+variant,['cmake','--build',build,'--parallel','2','--target',*TARGETS.values(),'SwaraXTHostBoundaryBench'],timeout=7200)
                 listing=json.loads(subprocess.check_output(['ctest','--test-dir',build,'--show-only=json-v1'],text=True))
                 (self.root/(variant+'-inventory.json')).write_text(json.dumps(listing,indent=2)+'\n')
                 commands={t['name']:t['command'] for t in listing['tests'] if t['name'] in TARGETS.values()}
                 require(set(commands)==set(TARGETS.values()),'Required runtime target missing')
                 record={'cases':{}}
+                self.report['variants'][variant]=record
+                if variant=='native' and self.args.arch=='x86_64':
+                    self.run('intel-original-integration',['ctest','--test-dir',build,'-R','^SwaraXTDualSvfIntegrationAudit$','--output-on-failure','--no-tests=error','--output-junit',self.root/'intel-integration.xml'],
+                        env={**self.env,'SWARA_ORIGINAL_TARGET':'1'},expected=0,timeout=600)
+                    record['original_full_integration']='PASS'
                 for case,target in TARGETS.items():
                     binary=Path(commands[target][0]);require(binary.is_file(),'Runtime executable missing')
                     require(subprocess.check_output(['lipo','-archs',binary],text=True).split()==[self.args.arch],'Wrong native architecture')
@@ -181,10 +194,7 @@ class BoundaryCampaign(Campaign):
                     baseline_equal=digest(directory/'final.f32')==baselines[case]
                     require(variant!='native' or baseline_equal,'Observation changed the preserved native output: '+case)
                     record['cases'][case]={'original_assertion_exit_code':int(code),'baseline_output_identical':baseline_equal,'binary_sha256':digest(binary)}
-                if variant=='native' and self.args.arch=='x86_64':
-                    code=self.run('intel-original-integration',['ctest','--test-dir',build,'-R','^SwaraXTDualSvfIntegrationAudit$','--output-on-failure','--no-tests=error','--output-junit',self.root/'intel-integration.xml'],
-                        env={**self.env,'SWARA_ORIGINAL_TARGET':'1'},expected=0,timeout=600)
-                    record['original_full_integration']='PASS'
+                    self.save()
                 benches=list(build.rglob('SwaraXTHostBoundaryBench'));require(len(benches)==1,'Benchmark missing')
                 self.run('cpu-'+variant,[benches[0]],timeout=300)
                 self.report['variants'][variant]=record;self.save()

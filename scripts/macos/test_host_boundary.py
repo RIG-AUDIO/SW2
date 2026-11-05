@@ -48,6 +48,7 @@ class HostBoundaryControls(unittest.TestCase):
     def test_cmake_maps_only_selected_production_sources(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);owned=root/'overlay';records=overlay(SOURCE,owned)
+            self.assertEqual((owned/'Source/Tuning/../../third_party').resolve(),SOURCE/'third_party')
             changed=[p for p,r in records.items() if r['original_sha256']!=r['compiled_sha256']]
             self.assertEqual(len(changed),3)
             project=root/'project';project.mkdir()

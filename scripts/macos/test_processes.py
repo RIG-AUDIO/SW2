@@ -130,15 +130,17 @@ class ProcessTests(unittest.TestCase):
             self.assertEqual(result.cleanup['remaining'],[])
     def test_noncooperating_other_group_is_reported_not_signalled(self):
         with tempfile.TemporaryDirectory() as d:
-            root=Path(d);release=root/'release-child'
-            source=f'import os,signal,time,pathlib\nif os.fork()==0:\n os.setpgid(0,0);signal.signal(signal.SIGTERM,signal.SIG_IGN)\n while not pathlib.Path({str(release)!r}).exists():time.sleep(.05)\nelse:time.sleep(30)'
+            root=Path(d);release=root/'release-child';ready=root/'child-ready'
+            source=f'import os,signal,time,pathlib\nif os.fork()==0:\n os.setpgid(0,0);signal.signal(signal.SIGTERM,signal.SIG_IGN)\n pathlib.Path({str(ready)!r}).write_text(str(os.getpid()))\n while not pathlib.Path({str(release)!r}).exists():time.sleep(.05)\nelse:time.sleep(30)'
             groups=[];original=os.killpg
             def signal_group(group,sig):groups.append(group);return original(group,sig)
             try:
                 with (root/'different-group.log').open('w') as stream,patch('processes.os.killpg',side_effect=signal_group):
-                    result=run_process([sys.executable,'-c',source],cwd=root,env=os.environ.copy(),stdout=stream,timeout=.4)
-                self.assertEqual(result,124);self.assertFalse(result.cleanup['success'])
+                    result=run_process([sys.executable,'-c',source],cwd=root,env=os.environ.copy(),stdout=stream,timeout=5)
+                self.assertTrue(ready.exists(),'Control child did not establish its separate process group')
+                self.assertEqual(result,124);self.assertFalse(result.cleanup['success'],result.cleanup)
                 self.assertTrue(result.cleanup['remaining'])
+                self.assertIn(int(ready.read_text()),[p['pid'] for p in result.cleanup['remaining']])
                 self.assertTrue(all(p['pgid']!=result.cleanup['pgid'] for p in result.cleanup['remaining']))
                 self.assertTrue(all(group==result.cleanup['pgid'] for group in groups))
             finally:
