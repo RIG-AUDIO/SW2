@@ -8,13 +8,44 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from parity_probe import overlay, DRIVERS, capture_driver
+from parity_probe import overlay, DRIVERS, capture_driver, REQUIRED_TESTS, required_commands
 from parity_metrics import compare, q20
 from policy import verify_dual_reference_selection, DUAL_REFERENCE_TEST
 
 SOURCE=Path(__file__).resolve().parents[2]
 
 class ParityControls(unittest.TestCase):
+    def inventory(self):
+        return {'tests':[{'name':name,'command':['/build/'+name,'argument']} for name in REQUIRED_TESTS]}
+
+    def test_unrelated_entries_without_command_are_not_extracted(self):
+        listing=self.inventory()
+        listing['tests'].insert(0,{'name':'UnbuiltUnrelatedTest'})
+        self.assertEqual(set(required_commands(listing)),set(REQUIRED_TESTS))
+
+    def test_missing_required_target_is_rejected(self):
+        listing=self.inventory();listing['tests'].pop()
+        with self.assertRaisesRegex(RuntimeError,'Missing required parity targets: '+REQUIRED_TESTS[-1]):
+            required_commands(listing)
+
+    def test_required_target_without_command_is_rejected(self):
+        for command in (None,[],[''],[None],'executable'):
+            listing=self.inventory();listing['tests'][0]['command']=command
+            with self.assertRaisesRegex(RuntimeError,'lacks an executable command: '+REQUIRED_TESTS[0]):
+                required_commands(listing)
+        listing=self.inventory();del listing['tests'][0]['command']
+        with self.assertRaisesRegex(RuntimeError,'lacks an executable command'):
+            required_commands(listing)
+
+    def test_valid_target_commands_preserve_arguments(self):
+        listing=self.inventory()
+        self.assertEqual(required_commands(listing),{t['name']:t['command'] for t in listing['tests']})
+
+    def test_duplicate_required_target_is_rejected(self):
+        listing=self.inventory();listing['tests'].append(listing['tests'][0])
+        with self.assertRaisesRegex(RuntimeError,'Duplicate required parity target'):
+            required_commands(listing)
+
     def test_reference_selection_platform_matrix(self):
         text=(SOURCE/DUAL_REFERENCE_TEST).read_text().split('// SWARAXT_DUAL_PLATFORM_GOLDENS_BEGIN\n')[1].split('// SWARAXT_DUAL_PLATFORM_GOLDENS_END')[0]
         text=text.replace('#include "DualSvfCurrentLinuxGoldens.h"','CURRENT').replace('#include "DualSvfSection2Goldens.h"','HISTORICAL')

@@ -17,6 +17,24 @@ DRIVERS = {
     'SwaraXTDualSvfIntegrationAudit': 'Tests/Filter/DualSvfIntegrationAuditMain.cpp',
 }
 SECTION2 = 'SwaraXTDualSvfSection2Tests'
+REQUIRED_TESTS = (*DRIVERS, SECTION2)
+
+def required_commands(listing):
+    """Unbuilt unrelated CTest executables may legitimately lack commands."""
+    commands = {}
+    for test in listing['tests']:
+        name = test.get('name')
+        if name not in REQUIRED_TESTS:
+            continue
+        require(name not in commands, 'Duplicate required parity target: '+name)
+        command = test.get('command')
+        require(isinstance(command, list) and command and
+                all(isinstance(argument, str) for argument in command) and command[0].strip(),
+                'Required parity target lacks an executable command: '+name)
+        commands[name] = command
+    missing = sorted(set(REQUIRED_TESTS) - commands.keys())
+    require(not missing, 'Missing required parity targets: '+', '.join(missing))
+    return commands
 
 def once(text, before, after):
     require(text.count(before) == 1, 'Unexpected diagnostic driver anchor: '+before)
@@ -143,14 +161,19 @@ class ParityProbe(Campaign):
             targets=[*DRIVERS,SECTION2,'SwaraXTSrcNoContractControl']
             self.run('build-targeted-parity',['cmake','--build',build,'--parallel','2','--target',*targets],timeout=7200)
             listing=json.loads(subprocess.check_output(['ctest','--test-dir',build,'--show-only=json-v1'],text=True))
-            commands={t['name']:t['command'] for t in listing['tests']}
+            (self.root/'ctest-inventory.json').write_text(json.dumps(listing,indent=2)+'\n')
+            self.report['unrelated_tests_without_command']=[t['name'] for t in listing['tests']
+                if t.get('name') not in REQUIRED_TESTS and not t.get('command')]
             self.report['test_inventory']=[t['name'] for t in listing['tests']]
+            self.save()
+            commands=required_commands(listing)
             compiled=json.loads((build/'compile_commands.json').read_text())
             self.report['compiled_input_sha256']={item['file']:digest(Path(item['file'])) for item in compiled if Path(item['file']).is_file()}
             self.report['target_executables']={}
             self.report['executions']=[]
             for target in [*DRIVERS,SECTION2]:
                 binary=Path(commands[target][0])
+                require(binary.is_file() and os.access(binary,os.X_OK),'Required parity executable is unavailable: '+target)
                 slices=subprocess.check_output(['lipo','-archs',binary],text=True).split()
                 require(slices==[self.args.arch],'Wrong diagnostic executable architecture')
                 self.report['target_executables'][target]={'sha256':digest(binary),'architectures':slices}
