@@ -13,12 +13,12 @@ import re
 import shutil
 import sys
 from ci import Campaign, SOURCE, digest
-from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path, APPLE_GUARD_TEST, verify_apple_guard_test, DUAL_REFERENCE_TEST, verify_dual_reference_selection, DUAL_INTEGRATION_TEST, verify_dual_integration_selection
+from policy import require, safe_extract_tar, files_manifest, check_bundle, SEAL, hosted_root, owned_path, verify_apple_guard_test, verify_dual_reference_selection, verify_dual_integration_selection
 
-CANDIDATE_SHA='3a287d0764cbbd57285582a25aa41b58ed6b03b1'
-CANDIDATE_RUN='41924729723'
+CANDIDATE_SHA='27a869335405055cefcefb0a46508810683164db'
+CANDIDATE_RUN='42189155062'
 CANDIDATE_ATTEMPT='1'
-ARCHIVE_SHA256='4ac730262b6993d96217dd6527fe959b2bd6898f79520ffb7f514ebaf37b8968'
+ARCHIVE_SHA256='5c08c0a86fdbbf8c9202e8c0824b8281ba68daf5796aec6bd87e196315a5ac45'
 
 class DiagnosticCampaign(Campaign):
     def configure(self,juce,universal=False):
@@ -78,18 +78,11 @@ class DiagnosticCampaign(Campaign):
         require(manifest['juce_sha']==self.report['juce_sha'] and manifest['dependency_overlay']==self.report['dependency_overlay'],'Candidate toolchain overlay differs')
         require(files_manifest(self.args.candidate)==manifest['files'],'Candidate checksum inventory mismatch')
         require(digest(self.args.candidate/'compiled-source-manifest.json')==manifest['compiled_source_manifest_sha256'],'Compiled-source provenance mismatch')
-        # Different CI revisions are permitted only with byte-identical product/test inputs.
-        for path in ('Source','resources','third_party'):
+        # The pinned candidate already includes the reviewed test drivers and build rules.
+        for path in ('Source', 'resources', 'third_party', 'Tests', 'CMakeLists.txt', 'cmake'):
             before=subprocess.check_output(['git','rev-parse',CANDIDATE_SHA+':'+path],cwd=SOURCE,text=True).strip()
             after=subprocess.check_output(['git','rev-parse','HEAD:'+path],cwd=SOURCE,text=True).strip()
             require(before==after,'Diagnostic checkout differs from approved candidate: '+path)
-        original_tests=subprocess.check_output(['git','show',CANDIDATE_SHA+':Tests/Apple/CMakeLists.txt'],cwd=SOURCE,text=True)
-        visibility_hook = "\n# Isolate the host's statically linked JUCE from loaded plugin modules.\ntarget_compile_options(SwaraXTApplePluginHost PRIVATE\n    \"$<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-fvisibility=hidden;-fvisibility-inlines-hidden>\")"
-        expected_tests=original_tests.replace('target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)',
-            'target_link_libraries(SwaraXTApplePluginHost PRIVATE juce::juce_audio_utils)'+visibility_hook)
-        require((SOURCE/'Tests/Apple/CMakeLists.txt').read_text()==expected_tests,'Unreviewed host visibility integration')
-        test_diff=subprocess.check_output(['git','diff','--name-only',CANDIDATE_SHA,'HEAD','--','Tests'],cwd=SOURCE,text=True).splitlines()
-        require(test_diff==['Tests/Apple/CMakeLists.txt',DUAL_INTEGRATION_TEST,DUAL_REFERENCE_TEST,APPLE_GUARD_TEST],'Current regression drivers differ from approved candidate')
         verify_apple_guard_test(SOURCE)
         verify_dual_reference_selection(SOURCE)
         verify_dual_integration_selection(SOURCE)
