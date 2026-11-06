@@ -27,9 +27,7 @@ def current_reference_drivers(root):
     manifest = {}
     for target, relative in DUAL_DRIVERS.items():
         original = SOURCE / relative
-        # Keep the repository selectors unchanged until every current anchor passes.
-        text = once(original.read_text(), '(defined(__APPLE__) && defined(__x86_64__))',
-                    'defined(__APPLE__)')
+        text = original.read_text()
         if relative == DUAL_INTEGRATION_TEST:
             anchor = '        const auto t=renderSection2Reference(s,fx);'
             text = once(text, anchor, anchor + r'''

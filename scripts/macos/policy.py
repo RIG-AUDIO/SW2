@@ -153,7 +153,7 @@ def verify_dual_reference_selection(source):
     original = subprocess.check_output(['git', 'show', BASE_SHA + ':' + DUAL_REFERENCE_TEST], cwd=source, text=True)
     old = '#if defined(__linux__) || defined(_MSC_VER)'
     require(original.count(old) == 1, 'Unexpected original Dual SVF reference selector')
-    expected = original.replace(old, old + ' || (defined(__APPLE__) && defined(__x86_64__))', 1)
+    expected = original.replace(old, old + ' || defined(__APPLE__)', 1)
     require((Path(source) / DUAL_REFERENCE_TEST).read_text() == expected,
             'Unreviewed Dual SVF reference-selection change')
 
@@ -161,7 +161,7 @@ def verify_dual_integration_selection(source):
     original = subprocess.check_output(['git','show',BASE_SHA+':'+DUAL_INTEGRATION_TEST],cwd=source,text=True)
     old = '#if defined(_MSC_VER) || defined(__linux__)'
     require(original.count(old)==1,'Unexpected original integration selector')
-    expected = original.replace(old,old+' || (defined(__APPLE__) && defined(__x86_64__))',1)
+    expected = original.replace(old,old+' || defined(__APPLE__)',1)
     require((Path(source)/DUAL_INTEGRATION_TEST).read_text()==expected,'Unreviewed integration selector change')
 
 def compare_public(source, baseline, checkout_sha, base_sha):

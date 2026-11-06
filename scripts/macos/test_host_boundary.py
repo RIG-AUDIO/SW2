@@ -18,7 +18,7 @@ class HostBoundaryControls(unittest.TestCase):
         text=(SOURCE/DUAL_INTEGRATION_TEST).read_text().split('#if defined(_MSC_VER)',1)[1].split('#endif',1)[0]
         text='#if defined(_MSC_VER)'+text+'#endif\n'
         text=text.replace('#include "DualSvfCurrentLinuxGoldens.h" // Host values independently qualified on MSVC.','CURRENT_HOST').replace('#include "DualSvfCurrentWindowsTimingGoldens.h"','CURRENT_NATIVE').replace('#include "DualSvfSection2Goldens.h"','HISTORICAL')
-        for macros,current in ((['__linux__'],True),(['_MSC_VER'],True),(['__APPLE__','__x86_64__'],True),(['__APPLE__','__aarch64__'],False)):
+        for macros,current in ((['__linux__'],True),(['_MSC_VER'],True),(['__APPLE__','__x86_64__'],True),(['__APPLE__','__aarch64__'],True),([],False)):
             result=subprocess.check_output(['c++','-E','-P','-undef','-x','c++',*['-D'+v for v in macros],'-'],input=text,text=True)
             self.assertEqual('CURRENT_NATIVE' in result,current)
             self.assertEqual('CURRENT_HOST' in result,current)

@@ -108,7 +108,7 @@ def overlay(source, destination):
         # Pin drivers to the completed original macOS campaign, not to new data.
         approved=subprocess.check_output(['git','show','3206c24bc93373b112e2462bc3ad0b07fe7f7589:'+relative],cwd=source,text=True)
         if relative=='Tests/Filter/DualSvfIntegrationAuditMain.cpp':
-            approved=approved.replace('#if defined(_MSC_VER) || defined(__linux__)', '#if defined(_MSC_VER) || defined(__linux__) || (defined(__APPLE__) && defined(__x86_64__))',1)
+            approved=approved.replace('#if defined(_MSC_VER) || defined(__linux__)', '#if defined(_MSC_VER) || defined(__linux__) || defined(__APPLE__)',1)
         require(original==approved,'Diagnostic stimulus/assertions changed: '+relative)
         result=capture_driver(relative,original)
         generated=destination/Path(relative).name

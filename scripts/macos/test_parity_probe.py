@@ -52,7 +52,7 @@ class ParityControls(unittest.TestCase):
         compiler=shutil.which('c++')
         self.assertIsNotNone(compiler)
         for macros,expected in ((['__linux__'],'CURRENT'),(['_MSC_VER'],'CURRENT'),
-            (['__APPLE__','__x86_64__'],'CURRENT'),(['__APPLE__','__aarch64__'],'HISTORICAL'),([], 'HISTORICAL')):
+            (['__APPLE__','__x86_64__'],'CURRENT'),(['__APPLE__','__aarch64__'],'CURRENT'),([], 'HISTORICAL')):
             actual=subprocess.check_output([compiler,'-E','-P','-undef','-x','c++',*['-D'+v for v in macros],'-'],input=text,text=True).strip()
             self.assertEqual(actual,expected,macros)
 
