@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from host_boundary import overlay,patched_source,driver,TARGETS,loop_capture,output_results
+from host_boundary import BASELINE,overlay,patched_source,driver,TARGETS,loop_capture,output_results
 from policy import verify_dual_integration_selection,DUAL_INTEGRATION_TEST,BASE_SHA
 
 SOURCE=Path(__file__).resolve().parents[2]
@@ -36,7 +36,7 @@ class HostBoundaryControls(unittest.TestCase):
     def test_scoped_experiment_changes_only_two_functions(self):
         paths=('Engine/SampleRate/PolyphaseFirResampler.h','Engine/SampleRate/HostResampler.cpp','Engine/DspBoard/BoardEffects.cpp')
         for relative in paths:
-            text=(SOURCE/'Source'/relative).read_text()
+            text=subprocess.check_output(['git','show',BASELINE+':Source/'+relative],cwd=SOURCE,text=True)
             observed=patched_source(relative,text)
             experimental=patched_source(relative,text,True)
             if relative.endswith('BoardEffects.cpp'):self.assertEqual(observed,experimental)
@@ -91,11 +91,16 @@ for(int i=0;i<1024;++i){while(src.size()<src.queueTargetSize()){random=random*16
 
     def test_decision_preserves_kernel_sources_and_original_fixture_assertions(self):
         for relative in ('Engine/SampleRate/PolyphaseFirResampler.h','Engine/SampleRate/HostResampler.cpp'):
-            original=(SOURCE/'Source'/relative).read_text()
+            original=subprocess.check_output(['git','show',BASELINE+':Source/'+relative],cwd=SOURCE,text=True)
             self.assertEqual(patched_source(relative,original,decision=True),original)
             strict=patched_source(relative,original,strict=True,decision=True)
             self.assertEqual(strict.count('#pragma clang fp contract(off)'),1)
             self.assertEqual(strict.replace('\n#pragma clang fp contract(off)',''),original)
+            production=(SOURCE/'Source'/relative).read_text()
+            guard='#if defined(__APPLE__) && defined(__clang__) && defined(__arm64__)'
+            start=production.index(guard)
+            end=production.index('#endif',start)+len('#endif')
+            self.assertEqual(production[:start]+'#pragma clang fp contract(off)'+production[end:],strict)
         original=(SOURCE/'Tests/Parity/DspFxIntegratedExactParityTestsMain.cpp').read_text()
         generated=driver(SOURCE,'looper',decision=True)
         for line in original.splitlines():

@@ -19,7 +19,8 @@ import urllib.request
 
 from login_context import run_login
 from policy import (require, hosted_root, owned_path, run_process, compare_public, files_manifest,
-                    check_bundle, safe_extract_zip, safe_extract_tar, revision, SEAL, SDK_SHA)
+                    check_bundle, safe_extract_zip, safe_extract_tar, revision, SEAL, SDK_SHA,
+                    HOST_ARITHMETIC, PRODUCTION_PARITY)
 from infrastructure import PublicInfrastructure
 from dependency_overlay import apply as apply_dependency_overlay
 from native_reference import BASELINE_SHA
@@ -256,10 +257,15 @@ class Campaign(PublicInfrastructure):
                 compiled[str(path)] = digest(path)
         for path in [SOURCE / 'Source/Tuning/RealFromChars.h', *(SOURCE / 'third_party/fast_float').rglob('*.h')]:
             compiled[str(path)] = digest(path)
+        for relative in HOST_ARITHMETIC:
+            path = SOURCE / relative
+            compiled[str(path)] = digest(path)
+            require(compiled[str(path)] == self.report['source_parity']['host_arithmetic_source_sha256'][relative],
+                    'Host arithmetic source differs from reviewed checkout')
         compiled_manifest = {'checkout_sha': self.report['source_sha'], 'files': compiled,
                              'actual_parser_source_sha256': digest(SOURCE / 'Source/Tuning/TuningTable.cpp'),
                              'actual_cutoff_source_sha256': digest(SOURCE / 'Source/Plugin/SwaraXtParameterLayout.cpp'),
-                             'parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION'}
+                             'parity': PRODUCTION_PARITY}
         compiled_file = self.root / 'compiled-source-manifest.json'
         compiled_file.write_text(json.dumps(compiled_manifest, indent=2) + '\n')
         shutil.copy2(compiled_file, stage / compiled_file.name)

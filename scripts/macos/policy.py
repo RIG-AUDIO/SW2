@@ -18,6 +18,15 @@ JUCE_SHA = 'e18f7f506c0b96f2c738a0bcd7fe6467a5005ad8'
 SDK_SHA = '9fad9770f2ae8542ab1a548a68c1ad1ac690abe0'
 SEAL = 'CI_AD_HOC_SEALED_NOT_DEVELOPER_ID_SIGNED'
 BASE_SHA = '5e7b967db0b52f773f382217a72c6c0c3ff6b8f7'
+PRODUCTION_PARITY = 'EXACT_PARSER_AND_APPLE_ARM64_HOST_ARITHMETIC_EXCEPTIONS'
+HOST_ARITHMETIC = {
+    'Source/Engine/SampleRate/PolyphaseFirResampler.h': (
+        'float PolyphaseFirResampler<T, P, I>::readInterpolated() noexcept',
+        'Keep the host SRC rounding consistent with the current audio references.'),
+    'Source/Engine/SampleRate/HostResampler.cpp': (
+        'float DcBlocker::process(float sample) noexcept',
+        'Keep the host DC recurrence rounded at each operation.'),
+}
 
 
 def require(condition, message='Qualification invariant failed'):
@@ -162,12 +171,22 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     parser_paths = {'Source/Plugin/SwaraXtParameterLayout.cpp', 'Source/Tuning/TuningTable.cpp', 'Source/Tuning/RealFromChars.h', 'REUSE.toml', 'LICENSES/MIT.txt'}
     allowed_shared = {'CMakeLists.txt', 'Tests/CMakeLists.txt', 'Tests/Qualification.cmake', 'cmake/StandaloneMidiCapacity.cmake', APPLE_GUARD_TEST, DUAL_REFERENCE_TEST, DUAL_INTEGRATION_TEST}
     for path in differences:
-        require(path in parser_paths or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
+        require(path in parser_paths or path in HOST_ARITHMETIC or path.startswith('third_party/fast_float/') or path in allowed_shared or path.startswith(('scripts/macos/', 'Tests/Apple/', 'docs/macos/'))
                 or path in ('.github/workflows/macos-qualification.yml', '.github/workflows/macos-development-build.yml', '.github/workflows/macos-intel-native-diagnostics.yml'), 'Product source changed: ' + path)
     verify_apple_guard_test(source)
     verify_dual_reference_selection(source)
     verify_dual_integration_selection(source)
-    # Exact, reviewed parser-only exception; arbitrary production changes still fail.
+    host_hashes = {}
+    for path, (signature, comment) in HOST_ARITHMETIC.items():
+        original = subprocess.check_output(['git', 'show', BASE_SHA + ':' + path], cwd=source)
+        anchor = (signature + '\n{\n').encode()
+        require(original.count(anchor) == 1, 'Unexpected host arithmetic function: ' + path)
+        guard = ('#if defined(__APPLE__) && defined(__clang__) && defined(__arm64__)\n'
+                 f'    // {comment}\n#pragma clang fp contract(off)\n#endif\n').encode()
+        actual = (Path(source) / path).read_bytes()
+        require(actual == original.replace(anchor, anchor + guard, 1), 'Unreviewed host arithmetic change: ' + path)
+        host_hashes[path] = hashlib.sha256(actual).hexdigest()
+    # Exact, reviewed parser exceptions.
     original = subprocess.check_output(['git', 'show', BASE_SHA + ':Source/Tuning/TuningTable.cpp'], cwd=source).decode()
     expected = original.replace('#include "Tuning/TuningTable.h"', '#include "Tuning/TuningTable.h"\n#include "Tuning/RealFromChars.h"')
     expected = expected.replace('std::from_chars(first, last, value, std::chars_format::general)', 'detail::realFromChars(first, last, value)')
@@ -199,7 +218,8 @@ def compare_public(source, baseline, checkout_sha, base_sha):
     version = re.search(r'project\(SwaraXT VERSION ([0-9.]+)', (Path(source) / 'CMakeLists.txt').read_text())
     require(version and version[1] == '1.3.0', 'Product version changed')
     return {'base_source_sha': BASE_SHA, 'checkout_sha': checkout_sha,
-            'production_parity': 'EXACT_PARSER_PORTABILITY_EXCEPTION', 'actual_parser_source_sha256': digest(Path(source) / 'Source/Tuning/TuningTable.cpp'), 'actual_cutoff_source_sha256': digest(Path(source) / 'Source/Plugin/SwaraXtParameterLayout.cpp'), 'parser_dependency_hashes': parser_hashes, 'version': '1.3.0',
+            'production_parity': PRODUCTION_PARITY, 'host_arithmetic_source_sha256': host_hashes,
+            'actual_parser_source_sha256': digest(Path(source) / 'Source/Tuning/TuningTable.cpp'), 'actual_cutoff_source_sha256': digest(Path(source) / 'Source/Plugin/SwaraXtParameterLayout.cpp'), 'parser_dependency_hashes': parser_hashes, 'version': '1.3.0',
             'product_trees': trees,
             'integration_paths': differences}
 

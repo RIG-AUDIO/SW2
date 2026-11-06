@@ -27,6 +27,10 @@ void DcBlocker::reset() noexcept
 
 float DcBlocker::process(float sample) noexcept
 {
+#if defined(__APPLE__) && defined(__clang__) && defined(__arm64__)
+    // Keep the host DC recurrence rounded at each operation.
+#pragma clang fp contract(off)
+#endif
     const float y = sample - x1_ + pole_ * y1_;
     x1_ = sample;
     y1_ = y;

@@ -239,6 +239,10 @@ int PolyphaseFirResampler<T, P, I>::minimumReadableSize() const noexcept
 template <int T, int P, bool I>
 float PolyphaseFirResampler<T, P, I>::readInterpolated() noexcept
 {
+#if defined(__APPLE__) && defined(__clang__) && defined(__arm64__)
+    // Keep the host SRC rounding consistent with the current audio references.
+#pragma clang fp contract(off)
+#endif
     if (size_ < kTaps)
         return 0.0f;
 

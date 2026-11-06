@@ -9,7 +9,7 @@ on:
         type: choice
         description: Isolated Release parity capture, focused smoke, or native profile diagnostics
         default: smoke-repro
-        options: [smoke-repro, Release-build-probe, Release-parity-capture, Host-boundary-capture, Host-portability-decision, AU-editor-forensics, Release, Debug, asan-ubsan, tsan]
+        options: [smoke-repro, Release-build-probe, Release-parity-capture, Host-boundary-capture, Host-portability-decision, AU-editor-forensics, Policy-B-probe, Release, Debug, asan-ubsan, tsan]
       optimize-build:
         type: boolean
         description: Measure cold build-local JUCE cache; prove Release before other profiles
@@ -47,7 +47,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python3 -m pip install cmake==3.31.6 ninja==1.11.1.4
-      - if: inputs.profile != 'Release-parity-capture' && inputs.profile != 'Host-boundary-capture' && inputs.profile != 'Host-portability-decision'
+      - if: inputs.profile != 'Release-parity-capture' && inputs.profile != 'Host-boundary-capture' && inputs.profile != 'Host-portability-decision' && inputs.profile != 'Policy-B-probe'
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           github-token: ${{ github.token }}
@@ -61,6 +61,10 @@ jobs:
           OPTIMIZE_BUILD: ${{ inputs.optimize-build || false }}
           DIAGNOSTIC_ARCH: ${{ inputs.architecture || 'x86_64' }}
         run: |
+          if [[ "$DIAGNOSTIC_PROFILE" == Policy-B-probe ]]; then
+            python3 scripts/macos/policy_b_probe.py --arch "$DIAGNOSTIC_ARCH" --root "$RUNNER_TEMP/native-diagnostic"
+            exit $?
+          fi
           if [[ "$DIAGNOSTIC_PROFILE" == AU-editor-forensics ]]; then
             python3 scripts/macos/au_editor_forensics.py --arch "$DIAGNOSTIC_ARCH" --root "$RUNNER_TEMP/native-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
             exit $?
