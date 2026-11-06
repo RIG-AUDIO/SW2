@@ -12,7 +12,7 @@ import time
 import shlex
 import unittest
 from unittest.mock import patch
-from processes import run_process
+from processes import run_process, snapshot
 from processes import ProcessCancelled, ProcessResult
 from ci import Campaign
 from types import SimpleNamespace
@@ -53,8 +53,23 @@ class ProcessTests(unittest.TestCase):
         def deny_term(group,sig):
             if sig==signal.SIGTERM:raise PermissionError(errno.EPERM,'denied')
             return original(group,sig)
-        with patch('processes.os.killpg',side_effect=deny_term):
-            result=self.invoke('import time;time.sleep(30)',timeout=.2)
+        with tempfile.TemporaryDirectory() as directory:
+            ready = Path(directory) / 'child-ready'
+            source = f'import time,pathlib;pathlib.Path({str(ready)!r}).touch();time.sleep(30)'
+
+            def observe_started_child(group):
+                # Exercise EPERM on a live owned child even when runner startup
+                # takes longer than the deliberately short command deadline.
+                deadline = time.monotonic() + 5
+                while not ready.exists() and time.monotonic() < deadline:
+                    time.sleep(.01)
+                return snapshot(group)
+
+            with patch('processes.snapshot', side_effect=observe_started_child), \
+                 patch('processes.os.killpg', side_effect=deny_term) as kill:
+                result = self.invoke(source, timeout=.2)
+            self.assertTrue(ready.exists(), 'Control child never started')
+            self.assertEqual([call.args[1] for call in kill.call_args_list], [signal.SIGTERM, signal.SIGKILL])
         self.assertEqual(result,124);self.assertFalse(result.cleanup['success']);self.assertEqual(result.cleanup['errors'][0]['errno'],errno.EPERM)
         self.assertEqual(result.cleanup['remaining'],[])
     def test_cancellation_preserves_interrupt_and_cleans_children(self):
