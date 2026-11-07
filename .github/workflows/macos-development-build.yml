@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: 2026 MontroneDSP
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: macOS Intel-hosted universal development build
+run-name: UNQUALIFIED macOS development build ${{ github.sha }}
+on:
+  push:
+    branches: [ci/macos-130-qualification]
+    paths:
+      - .github/workflows/macos-development-build.yml
+      - scripts/macos/**
+      - Source/Tuning/**
+      - third_party/fast_float/**
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sw2-intel-development-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  development-build:
+    if: github.repository == 'RIG-AUDIO/SW2'
+    runs-on: macos-15-intel
+    timeout-minutes: 180
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      BASE_SHA: 5e7b967db0b52f773f382217a72c6c0c3ff6b8f7
+      SWARAXT_REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5, Node 24
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0, Node 24
+        with:
+          python-version: '3.12'
+      - name: Verify current checkout and pinned frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = RIG-AUDIO/SW2
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m pip install cmake==3.31.6 ninja==1.11.1.4
+      - name: Current-SHA Intel preflight and tuning regressions
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: >-
+          python3 scripts/macos/ci.py preflight
+          --source-sha "$GITHUB_SHA" --base-source-sha "$BASE_SHA"
+          --mode build --arch x86_64 --root "$RUNNER_TEMP/development-preflight"
+      - name: Universal AU and VST3 development candidate
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: >-
+          python3 scripts/macos/ci.py universal
+          --source-sha "$GITHUB_SHA" --base-source-sha "$BASE_SHA"
+          --mode build --arch x86_64 --root "$RUNNER_TEMP/development-universal"
+      - name: Upload UNQUALIFIED development binaries and provenance
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0, Node 24
+        with:
+          name: UNQUALIFIED-universal-AU-VST3-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/development-universal/swaraxt-unsigned-universal.tar.gz
+            ${{ runner.temp }}/development-universal/archive-sha256.txt
+            ${{ runner.temp }}/development-universal/compiled-source-manifest.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve preflight and build evidence including failures
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0, Node 24
+        with:
+          name: intel-development-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/development-preflight/*.json
+            ${{ runner.temp }}/development-preflight/*.log
+            ${{ runner.temp }}/development-universal/*.json
+            ${{ runner.temp }}/development-universal/*.log
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,458 @@
+{
+  "purpose": "Preserved observation identity and exact experiment comparator. No reference admission.",
+  "source_sha": "99885a8eeaaa0d0e6773ca11abf15237786218d4",
+  "architectures": {
+    "x86_64": {
+      "classic": {
+        "final.f32": {
+          "native": "c94564640924361b705c52db0a553a4340d0334b1dfb97c666b3785d21fd4632",
+          "intel": "c94564640924361b705c52db0a553a4340d0334b1dfb97c666b3785d21fd4632"
+        }
+      },
+      "dual": {
+        "final.f32": {
+          "native": "b474ade693343633477752c2a6860a57664313d57a261d2690d34a6fd6222e41",
+          "intel": "b474ade693343633477752c2a6860a57664313d57a261d2690d34a6fd6222e41"
+        }
+      },
+      "src": {
+        "176400_impulse-output.f32": {
+          "native": "b3863e78ddad44bbad98490d9f7ace2841b096a19b99e4e1a5974571a20a828b",
+          "intel": "b3863e78ddad44bbad98490d9f7ace2841b096a19b99e4e1a5974571a20a828b"
+        },
+        "176400_noise-output.f32": {
+          "native": "7734ef0fa470f724c03031ad0d57f6e7911838900cc601ed686e2bb3ddeea9fc",
+          "intel": "7734ef0fa470f724c03031ad0d57f6e7911838900cc601ed686e2bb3ddeea9fc"
+        },
+        "176400_silence-output.f32": {
+          "native": "58addadd982be00456b092d551a587a0a25373b1465956ed31bafb61416471f3",
+          "intel": "58addadd982be00456b092d551a587a0a25373b1465956ed31bafb61416471f3"
+        },
+        "176400_sine1k-output.f32": {
+          "native": "be9c2120f0b7af9e2c99289343c1d6f8539c05f398178e8f2e7569fd7d97ffc0",
+          "intel": "be9c2120f0b7af9e2c99289343c1d6f8539c05f398178e8f2e7569fd7d97ffc0"
+        },
+        "176400_transient-output.f32": {
+          "native": "f6ccd42ed691609d59069cb249e40294e97f017b660a0f7abea0e9877eaa8b61",
+          "intel": "f6ccd42ed691609d59069cb249e40294e97f017b660a0f7abea0e9877eaa8b61"
+        },
+        "192000_impulse-output.f32": {
+          "native": "a759c7b1832df5bbb288ba4d89d8973e17864a3ab4a70eaa625b56f5ca99364c",
+          "intel": "a759c7b1832df5bbb288ba4d89d8973e17864a3ab4a70eaa625b56f5ca99364c"
+        },
+        "192000_noise-output.f32": {
+          "native": "ed115bee8effd7d07e8a103657e9c867abb84bf29be75057317e9e7b39c63c58",
+          "intel": "ed115bee8effd7d07e8a103657e9c867abb84bf29be75057317e9e7b39c63c58"
+        },
+        "192000_silence-output.f32": {
+          "native": "4c7eea521d2218c5965fd3666c694a967a939e29a6928d528b6ed1101176b8ac",
+          "intel": "4c7eea521d2218c5965fd3666c694a967a939e29a6928d528b6ed1101176b8ac"
+        },
+        "192000_sine1k-output.f32": {
+          "native": "3e5b5fdef59eaabe822f9e3178123502800c5b5c387ee65412ee35f9efd44d7a",
+          "intel": "3e5b5fdef59eaabe822f9e3178123502800c5b5c387ee65412ee35f9efd44d7a"
+        },
+        "192000_transient-output.f32": {
+          "native": "2d6036174e3fdba74428642dd2417c304512ac751f87ff93576acfc4db1ece2a",
+          "intel": "2d6036174e3fdba74428642dd2417c304512ac751f87ff93576acfc4db1ece2a"
+        },
+        "44100_impulse-output.f32": {
+          "native": "bcbd3732b38db506836af85129211b6249b1f74fbd086f868738432eea9e6960",
+          "intel": "bcbd3732b38db506836af85129211b6249b1f74fbd086f868738432eea9e6960"
+        },
+        "44100_noise-output.f32": {
+          "native": "0afa153a632d7c6a953068fc719fdebc492c8657e2dcb6bcde0442731def4a5a",
+          "intel": "0afa153a632d7c6a953068fc719fdebc492c8657e2dcb6bcde0442731def4a5a"
+        },
+        "44100_silence-output.f32": {
+          "native": "2c2cbccd5d41f1ab10f0106ca8df33869145cbdd02930a498214ef5c10af503e",
+          "intel": "2c2cbccd5d41f1ab10f0106ca8df33869145cbdd02930a498214ef5c10af503e"
+        },
+        "44100_sine1k-output.f32": {
+          "native": "524666de13957978e73a37521ea3042b66be65fcf0122fbd2fc53bb731d1b8c9",
+          "intel": "524666de13957978e73a37521ea3042b66be65fcf0122fbd2fc53bb731d1b8c9"
+        },
+        "44100_transient-output.f32": {
+          "native": "5b4338c1e4e51bfd55cab4935f4817ebf4c66a682888024b3348ca9168866227",
+          "intel": "5b4338c1e4e51bfd55cab4935f4817ebf4c66a682888024b3348ca9168866227"
+        },
+        "48000_impulse-output.f32": {
+          "native": "dd8f40527fcd2bcf2e95137f2448314d45be506995b948f764224eddd2d5a1d6",
+          "intel": "dd8f40527fcd2bcf2e95137f2448314d45be506995b948f764224eddd2d5a1d6"
+        },
+        "48000_noise-output.f32": {
+          "native": "a69686bb53529a409f4c67338077718ff77289d6888c467e0b15ed40abfb5cb7",
+          "intel": "a69686bb53529a409f4c67338077718ff77289d6888c467e0b15ed40abfb5cb7"
+        },
+        "48000_silence-output.f32": {
+          "native": "f6e28ad1753237d42be72be187a88f09a269097eeda24bcf12908db6bd361246",
+          "intel": "f6e28ad1753237d42be72be187a88f09a269097eeda24bcf12908db6bd361246"
+        },
+        "48000_sine1k-output.f32": {
+          "native": "008b4947d5ed69f01319d2eb93cadb36e4d9eab24baf9af0203ebb2f33b82e96",
+          "intel": "008b4947d5ed69f01319d2eb93cadb36e4d9eab24baf9af0203ebb2f33b82e96"
+        },
+        "48000_transient-output.f32": {
+          "native": "5007bde43148a7f997bbd6dcd4b4231dabeea38323c5ddd5d8d4c3ef556fa380",
+          "intel": "5007bde43148a7f997bbd6dcd4b4231dabeea38323c5ddd5d8d4c3ef556fa380"
+        },
+        "88200_impulse-output.f32": {
+          "native": "5b0b9f12897277292cb2961b65ad4acf4e98bd0b4f95dd201ba8300e9622b539",
+          "intel": "5b0b9f12897277292cb2961b65ad4acf4e98bd0b4f95dd201ba8300e9622b539"
+        },
+        "88200_noise-output.f32": {
+          "native": "02914d43892e81f965b6ce46b591152c17e5c981b0b1a43d2edf04f71bbe73cf",
+          "intel": "02914d43892e81f965b6ce46b591152c17e5c981b0b1a43d2edf04f71bbe73cf"
+        },
+        "88200_silence-output.f32": {
+          "native": "0f97790543329f8249a5b0ede1f5847b264bf4a2d08f661a948bd69bd96836e7",
+          "intel": "0f97790543329f8249a5b0ede1f5847b264bf4a2d08f661a948bd69bd96836e7"
+        },
+        "88200_sine1k-output.f32": {
+          "native": "b84f4cbe02393d839a3116750343f6c1736890a65f437b2b7ce970dc184eb7cb",
+          "intel": "b84f4cbe02393d839a3116750343f6c1736890a65f437b2b7ce970dc184eb7cb"
+        },
+        "88200_transient-output.f32": {
+          "native": "99d592a329ce12a5bfc585280823226f66617842bbd41eb3fcb47119f1d38cd9",
+          "intel": "99d592a329ce12a5bfc585280823226f66617842bbd41eb3fcb47119f1d38cd9"
+        },
+        "96000_impulse-output.f32": {
+          "native": "0e7dccf3b70e9d7b66e2bfb676cfef15e3b1cbffa70726eeff4324a92f8e541f",
+          "intel": "0e7dccf3b70e9d7b66e2bfb676cfef15e3b1cbffa70726eeff4324a92f8e541f"
+        },
+        "96000_noise-output.f32": {
+          "native": "474cf9e1097b5fc4569ffc432f79c36f8535f4d385130289bdf48a3aeee2b5c2",
+          "intel": "474cf9e1097b5fc4569ffc432f79c36f8535f4d385130289bdf48a3aeee2b5c2"
+        },
+        "96000_silence-output.f32": {
+          "native": "0299f757a85a1aad6cbe1ad2b0eda925d8df667cd04e646af8917f65cbf24537",
+          "intel": "0299f757a85a1aad6cbe1ad2b0eda925d8df667cd04e646af8917f65cbf24537"
+        },
+        "96000_sine1k-output.f32": {
+          "native": "98c08c47259a7224c3ed0f235a5bc65c4fa9b0830244b7db7579f65c5cb2b767",
+          "intel": "98c08c47259a7224c3ed0f235a5bc65c4fa9b0830244b7db7579f65c5cb2b767"
+        },
+        "96000_transient-output.f32": {
+          "native": "dc2736c8f66317ba7d501d61cfecd7629767b049ce3bf9e730f8be3324a205a7",
+          "intel": "dc2736c8f66317ba7d501d61cfecd7629767b049ce3bf9e730f8be3324a205a7"
+        }
+      },
+      "looper": {
+        "combNegative_default.f32": {
+          "native": "270f7e055081358171047181312df5f098fe1e91f01c30fcc8f4862d6e25891b",
+          "intel": "270f7e055081358171047181312df5f098fe1e91f01c30fcc8f4862d6e25891b"
+        },
+        "combPositive_default.f32": {
+          "native": "ee9a1e2f1c311d4d47a75582f1dc2dd1751caed096438e549716176543f379d7",
+          "intel": "ee9a1e2f1c311d4d47a75582f1dc2dd1751caed096438e549716176543f379d7"
+        },
+        "crushDelayDub_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "crushDelayFeedback_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "crush_default.f32": {
+          "native": "53b90fa64dcc70a578f9362137c43e70a4a0df15b21726c1393bcee328321ad6",
+          "intel": "53b90fa64dcc70a578f9362137c43e70a4a0df15b21726c1393bcee328321ad6"
+        },
+        "delay12_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay16_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay3_16_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay8_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delayDub_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delayFeedback_cv2max.f32": {
+          "native": "cc681dfc8c2f8f50f1011ee661ede49bdfd6bbcd3e43149c3c36ee748e64cd66",
+          "intel": "cc681dfc8c2f8f50f1011ee661ede49bdfd6bbcd3e43149c3c36ee748e64cd66"
+        },
+        "delayFeedback_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "distortion_cv1max.f32": {
+          "native": "175b132d446f701e3ebefe942fe1e01af567a9160f082b653de93f1338eab233",
+          "intel": "175b132d446f701e3ebefe942fe1e01af567a9160f082b653de93f1338eab233"
+        },
+        "distortion_cv1min.f32": {
+          "native": "e68a666ca5ebfd967a3084d7d56ff9e76ae776ba68b203aaf7eb13d198d14304",
+          "intel": "e68a666ca5ebfd967a3084d7d56ff9e76ae776ba68b203aaf7eb13d198d14304"
+        },
+        "distortion_default.f32": {
+          "native": "fcb9bd634ac85785551bf231875a80c5dacaa0468dc4e7bcf3939fd95da2372c",
+          "intel": "fcb9bd634ac85785551bf231875a80c5dacaa0468dc4e7bcf3939fd95da2372c"
+        },
+        "looper_default.f32": {
+          "native": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "looper_replay.f32": {
+          "native": "55c1d7cf7172c79fa8d418af1f99e73c80d53b961dd65131da5deb7b278a4cc8",
+          "intel": "55c1d7cf7172c79fa8d418af1f99e73c80d53b961dd65131da5deb7b278a4cc8"
+        },
+        "off_default.f32": {
+          "native": "68c2a2181990bb3c60ea84e4069e4d69ce3c415e6729df6309d3095d795c8fa3",
+          "intel": "68c2a2181990bb3c60ea84e4069e4d69ce3c415e6729df6309d3095d795c8fa3"
+        },
+        "pitch_default.f32": {
+          "native": "c5e7dd5f8b423cba4d3a4f59a3a8d9a63dfdd3b182f3b7c27ac66ac1611cb24c",
+          "intel": "c5e7dd5f8b423cba4d3a4f59a3a8d9a63dfdd3b182f3b7c27ac66ac1611cb24c"
+        },
+        "ringMod_default.f32": {
+          "native": "ae9ba4541665bba6ad38cd5b0906bdc929653555f9e7973c8070c02dde97fdfb",
+          "intel": "ae9ba4541665bba6ad38cd5b0906bdc929653555f9e7973c8070c02dde97fdfb"
+        },
+        "seq_ringmod.f32": {
+          "native": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+          "intel": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+        }
+      }
+    },
+    "arm64": {
+      "classic": {
+        "final.f32": {
+          "native": "7c60348bade59337b903237db7f3643153f30502a4ffc06ccb978d651d51c703",
+          "intel": "c94564640924361b705c52db0a553a4340d0334b1dfb97c666b3785d21fd4632"
+        }
+      },
+      "dual": {
+        "final.f32": {
+          "native": "821f7cf3aabfc01d929d50af73ccea6a7a812b1328005de5577cf7260fd1b3ea",
+          "intel": "b474ade693343633477752c2a6860a57664313d57a261d2690d34a6fd6222e41"
+        }
+      },
+      "src": {
+        "176400_impulse-output.f32": {
+          "native": "3900d4258b27851b39750df7fa813d1ab2bcc06b5d19da9454bc7db3634452f9",
+          "intel": "b3863e78ddad44bbad98490d9f7ace2841b096a19b99e4e1a5974571a20a828b"
+        },
+        "176400_noise-output.f32": {
+          "native": "29e2d302aaedd84e3d9996f0c8d1f4fa03d2da0203287d2df74392fc4b77d720",
+          "intel": "7734ef0fa470f724c03031ad0d57f6e7911838900cc601ed686e2bb3ddeea9fc"
+        },
+        "176400_silence-output.f32": {
+          "native": "58addadd982be00456b092d551a587a0a25373b1465956ed31bafb61416471f3",
+          "intel": "58addadd982be00456b092d551a587a0a25373b1465956ed31bafb61416471f3"
+        },
+        "176400_sine1k-output.f32": {
+          "native": "f5d098dee5fe574e35778fa346a33afc03bc7eb272508dc4d76fe4a6af916ab5",
+          "intel": "be9c2120f0b7af9e2c99289343c1d6f8539c05f398178e8f2e7569fd7d97ffc0"
+        },
+        "176400_transient-output.f32": {
+          "native": "eba75ca65a09ea0a5da301bfc6fdb90678f94debb0e8289958baa789c1b70984",
+          "intel": "f6ccd42ed691609d59069cb249e40294e97f017b660a0f7abea0e9877eaa8b61"
+        },
+        "192000_impulse-output.f32": {
+          "native": "1372047813475c41ef0f696387ab62c0f4df19c30f288ebc0cba1d56bdc5ba1f",
+          "intel": "a759c7b1832df5bbb288ba4d89d8973e17864a3ab4a70eaa625b56f5ca99364c"
+        },
+        "192000_noise-output.f32": {
+          "native": "fcb3d7359223704beb4715218c661c4eaef817aef20357e99178dad1d6024cfe",
+          "intel": "ed115bee8effd7d07e8a103657e9c867abb84bf29be75057317e9e7b39c63c58"
+        },
+        "192000_silence-output.f32": {
+          "native": "4c7eea521d2218c5965fd3666c694a967a939e29a6928d528b6ed1101176b8ac",
+          "intel": "4c7eea521d2218c5965fd3666c694a967a939e29a6928d528b6ed1101176b8ac"
+        },
+        "192000_sine1k-output.f32": {
+          "native": "a6c7dce2423701f7cf0022f2568ea29e3725075ad8c1424c0878330a3f087f28",
+          "intel": "3e5b5fdef59eaabe822f9e3178123502800c5b5c387ee65412ee35f9efd44d7a"
+        },
+        "192000_transient-output.f32": {
+          "native": "9fddff473aa54328287f519a62b42c5ddf522f1668e686b1ef038dbedea6d558",
+          "intel": "2d6036174e3fdba74428642dd2417c304512ac751f87ff93576acfc4db1ece2a"
+        },
+        "44100_impulse-output.f32": {
+          "native": "d08afea8e6be26df2da5406d4d7f986d7b9fb20c34dcba67c44bdc3556567008",
+          "intel": "bcbd3732b38db506836af85129211b6249b1f74fbd086f868738432eea9e6960"
+        },
+        "44100_noise-output.f32": {
+          "native": "f43fe8c95e9c828caffc2c9040c954fb56d82fc82027623f6d6634697a6ca77f",
+          "intel": "0afa153a632d7c6a953068fc719fdebc492c8657e2dcb6bcde0442731def4a5a"
+        },
+        "44100_silence-output.f32": {
+          "native": "2c2cbccd5d41f1ab10f0106ca8df33869145cbdd02930a498214ef5c10af503e",
+          "intel": "2c2cbccd5d41f1ab10f0106ca8df33869145cbdd02930a498214ef5c10af503e"
+        },
+        "44100_sine1k-output.f32": {
+          "native": "01d0d1cf8e771261b91ede577095edf0059e098324136ef0445446210fce115a",
+          "intel": "524666de13957978e73a37521ea3042b66be65fcf0122fbd2fc53bb731d1b8c9"
+        },
+        "44100_transient-output.f32": {
+          "native": "efcd841c0d054290d880b8263ab04c4cf4fdf84ad1adeba5daafae80087c84b3",
+          "intel": "5b4338c1e4e51bfd55cab4935f4817ebf4c66a682888024b3348ca9168866227"
+        },
+        "48000_impulse-output.f32": {
+          "native": "d159b1c7d0cca2126b2c04a846f5c9081ea8e83c9fa65f21dd683b5a7769baf9",
+          "intel": "dd8f40527fcd2bcf2e95137f2448314d45be506995b948f764224eddd2d5a1d6"
+        },
+        "48000_noise-output.f32": {
+          "native": "7c2f01ccb6eb5984f7dbc0a636a1adeda43164dd2c63d3905566fa1b898c65c3",
+          "intel": "a69686bb53529a409f4c67338077718ff77289d6888c467e0b15ed40abfb5cb7"
+        },
+        "48000_silence-output.f32": {
+          "native": "f6e28ad1753237d42be72be187a88f09a269097eeda24bcf12908db6bd361246",
+          "intel": "f6e28ad1753237d42be72be187a88f09a269097eeda24bcf12908db6bd361246"
+        },
+        "48000_sine1k-output.f32": {
+          "native": "09ba77872321f00cff2a5813ff50831969aee643940cc6a894ce8348d044632c",
+          "intel": "008b4947d5ed69f01319d2eb93cadb36e4d9eab24baf9af0203ebb2f33b82e96"
+        },
+        "48000_transient-output.f32": {
+          "native": "2df8b941f5b6535a2dd1caac7466ce5f0b751ad73a1b223279c09c5bf3216cd5",
+          "intel": "5007bde43148a7f997bbd6dcd4b4231dabeea38323c5ddd5d8d4c3ef556fa380"
+        },
+        "88200_impulse-output.f32": {
+          "native": "f5fc5c093c52920feab49fc6a81e29d6caa6f9bbf822cbb8a73d9d1c6cdd064a",
+          "intel": "5b0b9f12897277292cb2961b65ad4acf4e98bd0b4f95dd201ba8300e9622b539"
+        },
+        "88200_noise-output.f32": {
+          "native": "32368e842dfd1a827bdddb7fe83df57f790938aef5148b1e20d26b82b9df6bee",
+          "intel": "02914d43892e81f965b6ce46b591152c17e5c981b0b1a43d2edf04f71bbe73cf"
+        },
+        "88200_silence-output.f32": {
+          "native": "0f97790543329f8249a5b0ede1f5847b264bf4a2d08f661a948bd69bd96836e7",
+          "intel": "0f97790543329f8249a5b0ede1f5847b264bf4a2d08f661a948bd69bd96836e7"
+        },
+        "88200_sine1k-output.f32": {
+          "native": "63c5df9ddedfbd4b611038b1cf2f0bd079ed3431e26833d50ffba6959a29ad9a",
+          "intel": "b84f4cbe02393d839a3116750343f6c1736890a65f437b2b7ce970dc184eb7cb"
+        },
+        "88200_transient-output.f32": {
+          "native": "499aeea8551c251b0a8bfaf17aa3747113f5db2342c57b89fe4df23f069be792",
+          "intel": "99d592a329ce12a5bfc585280823226f66617842bbd41eb3fcb47119f1d38cd9"
+        },
+        "96000_impulse-output.f32": {
+          "native": "e22df6b24c1c2146d0e814dbbba0535128e09fa9f3b5d0cefddb394e192f1f56",
+          "intel": "0e7dccf3b70e9d7b66e2bfb676cfef15e3b1cbffa70726eeff4324a92f8e541f"
+        },
+        "96000_noise-output.f32": {
+          "native": "b1fa110e05530522bbb44d9624dcd76d148f4258fbc5272a48280f8eef153296",
+          "intel": "474cf9e1097b5fc4569ffc432f79c36f8535f4d385130289bdf48a3aeee2b5c2"
+        },
+        "96000_silence-output.f32": {
+          "native": "0299f757a85a1aad6cbe1ad2b0eda925d8df667cd04e646af8917f65cbf24537",
+          "intel": "0299f757a85a1aad6cbe1ad2b0eda925d8df667cd04e646af8917f65cbf24537"
+        },
+        "96000_sine1k-output.f32": {
+          "native": "d28ea3585596e2c3492a43337e5a76d084b23537528af2453988912ef47322fb",
+          "intel": "98c08c47259a7224c3ed0f235a5bc65c4fa9b0830244b7db7579f65c5cb2b767"
+        },
+        "96000_transient-output.f32": {
+          "native": "b60cd6491f0100479d969805419789cb47bcb7ed05d5bf1bd78c0564130f6670",
+          "intel": "dc2736c8f66317ba7d501d61cfecd7629767b049ce3bf9e730f8be3324a205a7"
+        }
+      },
+      "looper": {
+        "combNegative_default.f32": {
+          "native": "49ccd811a21b0e3b4966a6977b5aaaa78246a4aeebb439cecb86668182c0e32b",
+          "intel": "270f7e055081358171047181312df5f098fe1e91f01c30fcc8f4862d6e25891b"
+        },
+        "combPositive_default.f32": {
+          "native": "ef44b0befec00e4a49373d1bfa63ec542b5ac296f5a341531271911ceca834a5",
+          "intel": "ee9a1e2f1c311d4d47a75582f1dc2dd1751caed096438e549716176543f379d7"
+        },
+        "crushDelayDub_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "crushDelayFeedback_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "crush_default.f32": {
+          "native": "4ebe52352aeb104118de38c4edd80c02131f20768864fdfe33e000c4847fcc25",
+          "intel": "53b90fa64dcc70a578f9362137c43e70a4a0df15b21726c1393bcee328321ad6"
+        },
+        "delay12_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay16_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay3_16_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay8_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delayDub_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delayFeedback_cv2max.f32": {
+          "native": "bab71dfcff4d584f36982b15319cc0e59a15986adae2459b98bed07a53625f79",
+          "intel": "cc681dfc8c2f8f50f1011ee661ede49bdfd6bbcd3e43149c3c36ee748e64cd66"
+        },
+        "delayFeedback_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "delay_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "distortion_cv1max.f32": {
+          "native": "1592f312cee021f0a57f3b1e5e46369e14e465b700ee4f67367d6335844cd78c",
+          "intel": "175b132d446f701e3ebefe942fe1e01af567a9160f082b653de93f1338eab233"
+        },
+        "distortion_cv1min.f32": {
+          "native": "dde20bf5101743d5dad0888b05d81639e79d01e220c963cc050c7f564159b9f7",
+          "intel": "e68a666ca5ebfd967a3084d7d56ff9e76ae776ba68b203aaf7eb13d198d14304"
+        },
+        "distortion_default.f32": {
+          "native": "68740d5df5cead3d68cfa17c184c517d46c21260bc976c3e6191b201af7e006e",
+          "intel": "fcb9bd634ac85785551bf231875a80c5dacaa0468dc4e7bcf3939fd95da2372c"
+        },
+        "looper_default.f32": {
+          "native": "354add813709feaa50fb7376d0fa2664b9a86ee3d1d9d11710b6818cecf2db1a",
+          "intel": "05d7456f8a704f7354829d83d6ddd800d524b59a8a24c97404e591fc64742484"
+        },
+        "looper_replay.f32": {
+          "native": "449b386918c6f8796195e63d24ef31c129b085fb66946f4d4d4539c169b20b50",
+          "intel": "55c1d7cf7172c79fa8d418af1f99e73c80d53b961dd65131da5deb7b278a4cc8"
+        },
+        "off_default.f32": {
+          "native": "9530961c5d2c5845b7a94e610ed5ccd6892ad8a0941a0d0271ab2f0bf51acdda",
+          "intel": "68c2a2181990bb3c60ea84e4069e4d69ce3c415e6729df6309d3095d795c8fa3"
+        },
+        "pitch_default.f32": {
+          "native": "727b265ca570bd66b144c5ef4baf7335b309f0cf6d7ecbd6b308816a9bd95868",
+          "intel": "c5e7dd5f8b423cba4d3a4f59a3a8d9a63dfdd3b182f3b7c27ac66ac1611cb24c"
+        },
+        "ringMod_default.f32": {
+          "native": "5a25c5bd5bd4971eacbe7435783941d25cbc39985a178db0b534d00c71cd9415",
+          "intel": "ae9ba4541665bba6ad38cd5b0906bdc929653555f9e7973c8070c02dde97fdfb"
+        },
+        "seq_ringmod.f32": {
+          "native": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+          "intel": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe"
+        }
+      }
+    }
+  }
+}
