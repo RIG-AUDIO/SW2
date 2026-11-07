@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import platform
 import plistlib
+import re
 import shutil
 import shlex
 import subprocess
@@ -318,7 +319,7 @@ class Campaign(PublicInfrastructure):
         return validation_passed
 
     def regressions(self,build,juce,config):
-        """Unchanged complete build, instrumentation audit and CTest campaign."""
+        """Build and audit the full inventory before running CTest."""
         self.run('build-native-tests', ['cmake', '--build', build, '--target', 'SwaraXTQualificationTests',
                  '--parallel', '2', '--', '-k', '0'], timeout=10800)
         commands = json.loads((build / 'compile_commands.json').read_text())
@@ -336,26 +337,43 @@ class Campaign(PublicInfrastructure):
         listing = json.loads(subprocess.check_output(['ctest', '--test-dir', build, '--show-only=json-v1'], text=True, timeout=60))
         require(len(listing['tests']) > 50, "Qualification invariant: len(listing['tests']) > 50")
         require(not any(p['name'] == 'DISABLED' and p['value'] for t in listing['tests'] for p in t['properties']), 'Disabled tests require explicit review')
-        (self.root / 'ctest-inventory.json').write_text(json.dumps(listing, indent=2) + '\n')
+        inventory = self.root / 'ctest-inventory.json'
+        inventory.write_text(json.dumps(listing, indent=2) + '\n')
         self.report['test_count'] = len(listing['tests'])
         self.report['native_test_binaries'] = native_test_binaries(build,listing,self.args.arch)
+        shard = getattr(self.args, 'tsan_shard', None)
+        test_filter = []
+        if shard:
+            from tsan_shards import INPUT_FILES, SHARD_B, inspect_shard_junit, select_shards
+            assigned = select_shards(listing, self.args.profile, self.args.arch)[shard]
+            test_filter = ['-E' if shard == 'a' else '-R', '^(' + '|'.join(map(re.escape, sorted(SHARD_B))) + ')$']
+            filtered = json.loads(subprocess.check_output(['ctest', '--test-dir', build,
+                '--show-only=json-v1', *test_filter], text=True, timeout=60))['tests']
+            require(len(filtered) == len(assigned) and {test['name'] for test in filtered} == assigned,
+                    'CTest selected the wrong Intel TSan shard')
+            require(json.loads((self.root / 'compile-commands.json').read_text()) == commands,
+                    'Recorded compile database differs from audited commands')
+            self.report['tsan_shard_inputs'] = {name: digest(self.root / name) for name in INPUT_FILES}
         # Intel TSan runs the complete board/SRC endpoint matrix much slower
         # than the other profiles. Budget 270 minutes for the unchanged suite;
         # its individual 120-second case watchdogs still reject stalled cases.
-        # Measured non-CTest work is 57 minutes, within the 350-minute job cap.
+        # The Intel diagnostics workflow shards execution to fit the job cap.
         test_timeout = 16200 if self.args.arch == 'x86_64' and self.args.profile == 'tsan' else 10800
         self.report['ctest_timeout_seconds'] = test_timeout
         self.save()
         # Every registered regression must pass; this helper does not admit hosts.
         ctest = ['ctest', '--test-dir', build, '--output-on-failure', '--no-tests=error',
                  '--test-output-size-passed', '16777216', '--test-output-size-failed', '16777216',
-                 '--parallel', '1', '--output-junit', self.root / 'ctest.xml']
+                 '--parallel', '1', '--output-junit', self.root / 'ctest.xml', *test_filter]
         if self.args.profile == 'tsan':
             ctest.append('--verbose')  # Preserve current-case progress if interrupted.
         test_code = self.run('ctest', ctest, timeout=test_timeout, expected=None)
         require(test_code == 0, 'Native regression qualification failed')
-        from gate import inspect_ctest
-        self.report.update(inspect_ctest(self.root / 'ctest.xml', len(listing['tests'])))
+        if shard:
+            self.report.update(inspect_shard_junit(self.root / 'ctest.xml', assigned))
+        else:
+            from gate import inspect_ctest
+            self.report.update(inspect_ctest(self.root / 'ctest.xml', len(listing['tests'])))
         self.native_reference(juce, config)
 
     def verified_candidate(self):

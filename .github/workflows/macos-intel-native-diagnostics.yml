@@ -30,8 +30,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   diagnostic:
-    name: diagnostic (${{ inputs.architecture || 'x86_64' }})
+    name: diagnostic (${{ inputs.architecture || 'x86_64' }}${{ matrix.shard != 'none' && format(', TSan shard {0}', matrix.shard) || '' }})
     if: github.repository == 'RIG-AUDIO/SW2'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(inputs.profile == 'tsan' && inputs.architecture != 'arm64' && '["a","b"]' || '["none"]') }}
     runs-on: ${{ inputs.architecture == 'arm64' && 'macos-15' || 'macos-15-intel' }}
     timeout-minutes: 350
     env:
@@ -60,6 +64,7 @@ jobs:
           DIAGNOSTIC_PROFILE: ${{ inputs.profile || 'smoke-repro' }}
           OPTIMIZE_BUILD: ${{ inputs.optimize-build || false }}
           DIAGNOSTIC_ARCH: ${{ inputs.architecture || 'x86_64' }}
+          TSAN_SHARD: ${{ matrix.shard }}
         run: |
           if [[ "$DIAGNOSTIC_PROFILE" == Policy-B-probe ]]; then
             python3 scripts/macos/policy_b_probe.py --arch "$DIAGNOSTIC_ARCH" --root "$RUNNER_TEMP/native-diagnostic"
@@ -83,6 +88,7 @@ jobs:
           fi
           options=()
           if [[ "$OPTIMIZE_BUILD" == true ]]; then options+=(--optimize-build); fi
+          if [[ "$TSAN_SHARD" != none ]]; then options+=(--tsan-shard "$TSAN_SHARD"); fi
           python3 scripts/macos/intel_diagnostics.py --profile "$DIAGNOSTIC_PROFILE" --arch "$DIAGNOSTIC_ARCH" "${options[@]}" \
             --root "$RUNNER_TEMP/native-diagnostic" --candidate-download "$RUNNER_TEMP/approved-candidate"
       - name: Verify owned AU cleanup after failure
@@ -97,7 +103,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: native-diagnostic-${{ inputs.architecture || 'x86_64' }}-${{ inputs.profile || 'smoke-repro' }}-${{ github.sha }}-${{ github.run_attempt }}
+          name: native-diagnostic-${{ inputs.architecture || 'x86_64' }}-${{ inputs.profile || 'smoke-repro' }}${{ matrix.shard != 'none' && format('-shard-{0}', matrix.shard) || '' }}-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/native-diagnostic/*.json
             ${{ runner.temp }}/native-diagnostic/*.log
@@ -111,5 +117,36 @@ jobs:
             ${{ runner.temp }}/native-diagnostic/boundary/**/*.json
             ${{ runner.temp }}/native-diagnostic/owned-login-*/*.log
             ${{ runner.temp }}/native-diagnostic/owned-login-*/cleanup.json
+          if-no-files-found: error
+          retention-days: 7
+
+  intel-tsan-gate:
+    name: Intel TSan aggregate gate
+    needs: diagnostic
+    if: always() && github.repository == 'RIG-AUDIO/SW2' && inputs.profile == 'tsan' && inputs.architecture != 'arm64'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          pattern: native-diagnostic-x86_64-tsan-shard-*-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/tsan-shards
+      - name: Verify both shards and complete CTest coverage
+        if: always()
+        env:
+          SHARD_JOBS_RESULT: ${{ needs.diagnostic.result }}
+        run: python3 scripts/macos/tsan_shards.py "$RUNNER_TEMP/tsan-shards" "$RUNNER_TEMP/intel-tsan-gate.json"
+      - name: Preserve aggregate decision
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: intel-tsan-gate-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/intel-tsan-gate.json
           if-no-files-found: error
           retention-days: 7

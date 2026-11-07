@@ -151,6 +151,11 @@ class DiagnosticCampaign(Campaign):
         # No fingerprint generation, no approval, no changes to strict native_reference.py.
         return None
 
+    def tests(self, juce):
+        if getattr(self.args, 'tsan_shard', None):
+            self.verified_candidate()
+        return super().tests(juce)
+
 class ReleaseBuildProbe(DiagnosticCampaign):
     """Compile/CTest measurement only; cannot admit the known failed AU validator."""
     def execute(self):
@@ -183,8 +188,11 @@ def main():
     p.add_argument('--profile',choices=['smoke-repro','Release-build-probe','Release','Debug','asan-ubsan','tsan'],default='smoke-repro')
     p.add_argument('--optimize-build',action='store_true',help='Validate and measure the JUCE-only preprocessor cache')
     p.add_argument('--arch',choices=['x86_64','arm64'],default='x86_64')
+    p.add_argument('--tsan-shard', choices=['a', 'b'])
     p.add_argument('--root',type=Path,required=True);p.add_argument('--candidate-download',type=Path,required=True)
-    a=p.parse_args();hosted_root(a.root,SOURCE)
+    a=p.parse_args()
+    require(not a.tsan_shard or (a.profile == 'tsan' and a.arch == 'x86_64'), 'Sharding requires Intel TSan')
+    hosted_root(a.root,SOURCE)
     a.candidate_download=owned_path(a.candidate_download,os.environ['RUNNER_TEMP'])
     archive=a.candidate_download/'swaraxt-unsigned-universal.tar.gz'
     require(archive.is_file() and not archive.is_symlink(),'Approved archive missing or linked')
@@ -200,9 +208,13 @@ def main():
     campaign.report['diagnostic_only']=True
     campaign.report['audio_reference_admission']='REVIEW_REQUIRED'
     campaign.report['full_qualification']='PENDING'
+    if a.tsan_shard:
+        campaign.report['tsan_shard'] = a.tsan_shard
     try:
         campaign.execute()
         campaign.report['technical_execution']='PASS'
+        if a.tsan_shard:
+            campaign.report['decision'] = 'INTEL_TSAN_SHARD_PASS'
     except BaseException:
         campaign.report['technical_execution']='FAIL'
         raise

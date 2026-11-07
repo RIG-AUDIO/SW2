@@ -168,6 +168,8 @@ def load_tests(loader, tests, pattern):
     tests.addTests(loader.loadTestsFromModule(test_intel_diagnostics))
     import test_scheduling
     tests.addTests(loader.loadTestsFromModule(test_scheduling))
+    import test_tsan_shards
+    tests.addTests(loader.loadTestsFromModule(test_tsan_shards))
     import test_policy
     import test_native_reference
     tests.addTests(loader.loadTestsFromModule(test_native_reference))
